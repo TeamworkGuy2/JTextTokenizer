@@ -1,0 +1,18 @@
+{
+	"version" : "0.1.0",
+	"name" : "jtext-tokenizer",
+	"description" : "CharParser and CharParserFactory implementations (jtext-parser library) for text tokenization",
+	"homepage" : "https://github.com/TeamworkGuy2/JTextTokenizer",
+	"license" : "MIT",
+	"main" : "./bin/jtext_tokenizer.jar",
+	"dependencies" : {
+		"jarrays": "*",
+		"jcollection-builders": "*",
+		"jcollection-util": "*",
+		"jfunc": "*",
+		"jprimitive-collections": "*",
+		"jtext-parser": "*",
+		"jtext-util": "*",
+		"jtuples": "*"
+	}
+}
