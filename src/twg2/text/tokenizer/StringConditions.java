@@ -84,7 +84,7 @@ public class StringConditions {
 
 
 		@Override
-		public TextFragmentRef getCompleteMatchedTextCoords() {
+		public TextFragmentRef getMatchedTextCoords() {
 			return coords;
 		}
 

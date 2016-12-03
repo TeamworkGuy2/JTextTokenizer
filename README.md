@@ -1,6 +1,6 @@
 JTextTokenizer
 ==============
-version: 0.1.0
+version: 0.2.0
 
 CharParser and CharParserFactory implementations (jtext-parser library) for text tokenization including:
 * conditions (CharParsers implementations for string contains, literal, end-not-preceded-by, etc),

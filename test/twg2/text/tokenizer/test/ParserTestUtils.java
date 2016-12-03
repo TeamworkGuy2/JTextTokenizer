@@ -52,7 +52,7 @@ public interface ParserTestUtils {
 		Assert.assertEquals(name + " '" + src + "' isFailed() ", expectFailed, isFailed);
 
 		if(isComplete && srcExpect != null) {
-			val parsedText = cond.getCompleteMatchedTextCoords().getText(src);
+			val parsedText = cond.getMatchedTextCoords().getText(src);
 			Assert.assertEquals(srcExpect, parsedText);
 		}
 	}

@@ -75,7 +75,7 @@ public class CharCompoundConditions {
 
 
 		@Override
-		public TextFragmentRef getCompleteMatchedTextCoords() {
+		public TextFragmentRef getMatchedTextCoords() {
 			return coords;
 		}
 

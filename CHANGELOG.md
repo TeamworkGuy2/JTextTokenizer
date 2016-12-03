@@ -4,7 +4,17 @@ This project does its best to adhere to [Semantic Versioning](http://semver.org/
 
 
 --------
-###[0.1.0](N/A) - 2016-10-29
+###[0.2.0](N/A) - 2016-12-03
+#### Changed
+* Updated jtext-parser dependency to latest 0.11.0 version (getCompleteMatchedTextCoords() -> getMatchedTextCoords())
+* Refactored CharConditionPipe, CharConditions, and CharMultiConditionParser to use new parsing strategy:
+  * Given a character, test each non-compound parser and when a parser is found, keep reading and passing input to that parser until it completes or fails (rewind the TextParser if it fails), this fixes issues where two or more parsers were pasing the same input or compound parsers were using input from the middle of non-compound tokens
+  * Required switching from TextFragmentRef.merge() to new TextFragmentRef.span() in jtext-parser@0.11.0 to create correct text fragments for compound conditions
+* CharConditions.EndNotPrecededBy no longer supports a minimum number of characters previous to the ending character being encountered condition
+
+
+--------
+###[0.1.0](https://github.com/TeamworkGuy2/JTextTokenizer/commit/d012885b65b3cd044e280dde4fdd0a1231d1be3a) - 2016-10-29
 #### Added
 * Initial commit of text tokenization code moved from the JParseCode library into this one.
 * Includes:

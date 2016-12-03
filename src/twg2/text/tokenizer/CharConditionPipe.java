@@ -22,7 +22,81 @@ import twg2.text.stringUtils.StringJoin;
  */
 public class CharConditionPipe {
 
+	@SafeVarargs
+	public static <S extends CharParser> AllRequired<S> createPipeAllRequired(String name, Iterable<S>... requiredConditionSets) {
+		val requiredSets = new ArrayList<List<S>>();
+		for(Iterable<S> requiredCondSet : requiredConditionSets) {
+			requiredSets.add(ListBuilder.mutable(requiredCondSet));
+		}
 
+		val cond = new AllRequired<S>(name, requiredSets);
+		return cond;
+	}
+
+
+
+	@SafeVarargs
+	public static <S extends CharParser> AllRequiredPlain<S> createPipePlainAllRequired(String name, boolean ignoreFirstConditionCoords, Iterable<S>... requiredConditionSets) {
+		val requiredSets = new ArrayList<List<S>>();
+		for(Iterable<S> requiredCondSet : requiredConditionSets) {
+			requiredSets.add(ListBuilder.mutable(requiredCondSet));
+		}
+
+		val cond = new AllRequiredPlain<S>(name, ignoreFirstConditionCoords, requiredSets);
+		return cond;
+	}
+
+
+	public static <S extends CharParser> RepeatableSeparator<S> createPipeRepeatableSeparator(String name, Iterable<? extends S> requiredConditions, Iterable<? extends S> separatorConditions) {
+		val conds = new ArrayList<List<? extends S>>();
+		conds.add(ListBuilder.mutable(requiredConditions));
+
+		if(separatorConditions != null) {
+			val separatorSet = ListBuilder.mutable(separatorConditions);
+			conds.add(separatorSet);
+		}
+
+		val cond = new RepeatableSeparator<S>(name, conds);
+		return cond;
+	}
+
+
+	@SuppressWarnings("unchecked")
+	@SafeVarargs
+	public static <S extends CharParser> OptionalSuffix<S> createPipeOptionalSuffix(String name, Iterable<? extends S> requiredConditions, Iterable<? extends S>... optionalConditions) {
+		val conditionSets = new ArrayList<List<S>>();
+		conditionSets.add(ListBuilder.mutable((Iterable<S>)requiredConditions));
+
+		for(Iterable<S> condSet : (Iterable<S>[])optionalConditions) {
+			conditionSets.add(ListBuilder.mutable(condSet));
+		}
+
+		val cond = new OptionalSuffix<S>(name, conditionSets);
+		return cond;
+	}
+
+
+	@SuppressWarnings("unchecked")
+	@SafeVarargs
+	public static <S extends CharParser> BasePipe<S> createPipeOptionalSuffixesAny(String name, Iterable<? extends S> requiredConditions, Iterable<? extends S>... optionalConditions) {
+		val conditionSets = new ArrayList<List<S>>();
+		conditionSets.add(ListBuilder.mutable((Iterable<S>)requiredConditions));
+
+		for(Iterable<S> condSet : (Iterable<S>[])optionalConditions) {
+			conditionSets.add(ListBuilder.mutable(condSet));
+		}
+
+		val cond = new OptionalSuffixesAny<S>(name, conditionSets);
+		return cond;
+	}
+
+
+
+	/** An abstract list of lists of {@link ParserCondition}
+	 * @param <T> The type of {@link ParserCondition} in this pipe
+	 * @author TeamworkGuy2
+	 * @since 2015-2-13
+	 */
 	public static abstract class BasePipe<T extends ParserCondition> implements CharParser {
 		final boolean canReuse;
 		final List<List<T>> conditionSets; // FIFO list of conditions in this pipe
@@ -196,13 +270,14 @@ public class CharConditionPipe {
 
 
 
-	/** A {@link CharConditionPipe} with the same type of {@link CharParser} from start to end
+	/** A {@link BasePipe} with the same type of {@link CharParser} from start to end
 	 * @param <T> the type of parser mark conditions in this pipe
 	 * @author TeamworkGuy2
 	 * @since 2015-2-22
 	 */
 	public static abstract class BasePipeMatchable<T extends CharParser> extends BasePipe<T> implements CharParserMatchable {
 		private BiPredicates.CharObject<TextParser> firstCharFilter;
+		private TextFragmentRefImplMut coords = null;
 
 
 		@SuppressWarnings("unchecked")
@@ -253,85 +328,25 @@ public class CharConditionPipe {
 			return this.firstCharFilter;
 		}
 
-	}
 
-
-
-
-	@SafeVarargs
-	public static <S extends CharParser> AllRequired<S> createPipeAllRequired(String name, Iterable<S>... requiredConditionSets) {
-		val requiredSets = new ArrayList<List<S>>();
-		for(Iterable<S> requiredCondSet : requiredConditionSets) {
-			requiredSets.add(ListBuilder.mutable(requiredCondSet));
-		}
-		
-		val cond = new AllRequired<S>(name, requiredSets);
-		return cond;
-	}
-
-
-
-	@SafeVarargs
-	public static <S extends CharParser> AllRequiredPlain<S> createPipePlainAllRequired(String name, boolean ignoreFirstConditionCoords, Iterable<S>... requiredConditionSets) {
-		val requiredSets = new ArrayList<List<S>>();
-		for(Iterable<S> requiredCondSet : requiredConditionSets) {
-			requiredSets.add(ListBuilder.mutable(requiredCondSet));
-		}
-		
-		val cond = new AllRequiredPlain<S>(name, ignoreFirstConditionCoords, requiredSets);
-		return cond;
-	}
-
-
-	public static <S extends CharParser> RepeatableSeparator<S> createPipeRepeatableSeparator(String name, Iterable<? extends S> requiredConditions, Iterable<? extends S> separatorConditions) {
-		val conds = new ArrayList<List<? extends S>>();
-		conds.add(ListBuilder.mutable(requiredConditions));
-
-		if(separatorConditions != null) {
-			val separatorSet = ListBuilder.mutable(separatorConditions);
-			conds.add(separatorSet);
+		@Override
+		public TextFragmentRef getMatchedTextCoords() {
+			return this.coords;
 		}
 
-		val cond = new RepeatableSeparator<S>(name, conds);
-		return cond;
-	}
 
-
-	@SuppressWarnings("unchecked")
-	@SafeVarargs
-	public static <S extends CharParser> OptionalSuffix<S> createPipeOptionalSuffix(String name, Iterable<? extends S> requiredConditions, Iterable<? extends S>... optionalConditions) {
-		val conditionSets = new ArrayList<List<S>>();
-		conditionSets.add(ListBuilder.mutable((Iterable<S>)requiredConditions));
-
-		for(Iterable<S> condSet : (Iterable<S>[])optionalConditions) {
-			conditionSets.add(ListBuilder.mutable(condSet));
+		@Override
+		void reset() {
+			super.reset();
+			this.coords = null;
 		}
 
-		val cond = new OptionalSuffix<S>(name, conditionSets);
-		return cond;
-	}
-
-
-	@SuppressWarnings("unchecked")
-	@SafeVarargs
-	public static <S extends CharParser> BasePipe<S> createPipeOptionalSuffixesAny(String name, Iterable<? extends S> requiredConditions, Iterable<? extends S>... optionalConditions) {
-		val conditionSets = new ArrayList<List<S>>();
-		conditionSets.add(ListBuilder.mutable((Iterable<S>)requiredConditions));
-
-		for(Iterable<S> condSet : (Iterable<S>[])optionalConditions) {
-			conditionSets.add(ListBuilder.mutable(condSet));
-		}
-
-		val cond = new OptionalSuffixesAny<S>(name, conditionSets);
-		return cond;
 	}
 
 
 
 
 	public static class AllRequired<S extends CharParser> extends BasePipeMatchable<S> {
-		private TextFragmentRefImplMut coords = null;
-
 
 		@SafeVarargs
 		public AllRequired(String name, CharParserMatchable filter, S... filters) {
@@ -350,12 +365,6 @@ public class CharConditionPipe {
 
 
 		@Override
-		public TextFragmentRef getCompleteMatchedTextCoords() {
-			return this.coords;
-		}
-
-
-		@Override
 		public boolean acceptNext(char ch, TextParser buf) {
 			if(this.curCondition == null) {
 				this.failed = true;
@@ -365,8 +374,8 @@ public class CharConditionPipe {
 			boolean res = this.curCondition.acceptNext(ch, buf);
 			// when complete
 			if(this.curCondition.isComplete()) {
-				val curCondCoords = this.curCondition.getCompleteMatchedTextCoords();
-				this.coords = this.coords == null ? TextFragmentRef.copyMutable(curCondCoords) : TextFragmentRef.merge(this.coords, this.coords, curCondCoords);
+				val curCondCoords = this.curCondition.getMatchedTextCoords();
+				super.coords = super.coords == null ? TextFragmentRef.copyMutable(curCondCoords) : TextFragmentRef.span(super.coords, curCondCoords, super.coords);
 
 				// get the next condition
 				this.curCondIndex++;
@@ -393,13 +402,6 @@ public class CharConditionPipe {
 			}
 
 			return res;
-		}
-
-
-		@Override
-		void reset() {
-			super.reset();
-			this.coords = null;
 		}
 
 
@@ -434,7 +436,7 @@ public class CharConditionPipe {
 
 
 		@Override
-		public TextFragmentRef getCompleteMatchedTextCoords() {
+		public TextFragmentRef getMatchedTextCoords() {
 			return this.coords;
 		}
 
@@ -449,9 +451,9 @@ public class CharConditionPipe {
 			boolean res = this.curCondition.acceptNext(ch, buf);
 			// when complete
 			if(this.curCondition.isComplete()) {
-				val curCondCoords = this.curCondition.getCompleteMatchedTextCoords();
+				val curCondCoords = this.curCondition.getMatchedTextCoords();
 				if(!this.ignoreFirstConditionCoords || super.curCondIndex > 0) {
-					this.coords = this.coords == null ? TextFragmentRef.copyMutable(curCondCoords) : TextFragmentRef.merge(this.coords, this.coords, curCondCoords);
+					this.coords = this.coords == null ? TextFragmentRef.copyMutable(curCondCoords) : TextFragmentRef.span(this.coords, curCondCoords, this.coords);
 				}
 
 				// get the next condition
@@ -501,9 +503,10 @@ public class CharConditionPipe {
 
 
 
+	/** Accepts multiple sets of {@link CharParser}, the first set is required, all remaining sets are optional.
+	 * Parsers are extracted from the sets via the virtual sub-class overridden {@link #nextCondition()} method.
+	 */
 	public static abstract class AcceptMultiple<S extends CharParser> extends BasePipeMatchable<S> {
-		private TextFragmentRefImplMut coords = null;
-
 
 		public AcceptMultiple(String name, CharParserMatchable filter, Collection<S> filters) {
 			super(name, filter, filters);
@@ -515,13 +518,10 @@ public class CharConditionPipe {
 		}
 
 
+		/** Logic for getting the next condition based on the current set and condition indices
+		 * @return the next condition to parse or null if there are no remaining conditions
+		 */
 		public abstract S nextCondition();
-
-
-		@Override
-		public TextFragmentRef getCompleteMatchedTextCoords() {
-			return this.coords;
-		}
 
 
 		@Override
@@ -534,8 +534,8 @@ public class CharConditionPipe {
 			boolean res = super.curCondition.acceptNext(ch, buf);
 			// when complete
 			if(super.curCondition.isComplete()) {
-				val curCondCoords = super.curCondition.getCompleteMatchedTextCoords();
-				this.coords = this.coords == null ? TextFragmentRef.copyMutable(curCondCoords) : TextFragmentRef.merge(this.coords, this.coords, curCondCoords);
+				val curCondCoords = super.curCondition.getMatchedTextCoords();
+				super.coords = super.coords == null ? TextFragmentRef.copyMutable(curCondCoords) : TextFragmentRef.span(super.coords, curCondCoords, super.coords);
 
 				// get the next condition, or null
 				super.curCondition = nextCondition();
@@ -576,13 +576,6 @@ public class CharConditionPipe {
 			}
 
 			return res;
-		}
-
-
-		@Override
-		void reset() {
-			super.reset();
-			this.coords = null;
 		}
 
 	}
@@ -662,7 +655,6 @@ public class CharConditionPipe {
 	 * @since 2016-2-7
 	 */
 	public static class OptionalSuffixesAny<S extends CharParser> extends BasePipeMatchable<S> {
-		private TextFragmentRefImplMut coords = null;
 		private boolean prevCallLookAheadSucceeded;
 		private char prevCallLookAheadChar;
 
@@ -681,12 +673,6 @@ public class CharConditionPipe {
 
 		private final void setup() {
 			super.subseqentConditionSetsOptional = true;
-		}
-
-
-		@Override
-		public TextFragmentRef getCompleteMatchedTextCoords() {
-			return this.coords;
 		}
 
 
@@ -710,8 +696,8 @@ public class CharConditionPipe {
 			// when complete
 			if((complete = super.curCondition.isComplete()) || super.curCondition.isFailed()) {
 				if(complete) {
-					val curCondCoords = super.curCondition.getCompleteMatchedTextCoords();
-					this.coords = this.coords == null ? TextFragmentRef.copyMutable(curCondCoords) : TextFragmentRef.merge(this.coords, this.coords, curCondCoords);
+					val curCondCoords = super.curCondition.getMatchedTextCoords();
+					super.coords = super.coords == null ? TextFragmentRef.copyMutable(curCondCoords) : TextFragmentRef.span(super.coords, curCondCoords, super.coords);
 				}
 
 				// check if the parser will accept more input (for optional repeat parsers), else find the next parser that will
@@ -802,13 +788,6 @@ public class CharConditionPipe {
 				super.anyComplete = true;
 				return null;
 			}
-		}
-
-
-		@Override
-		void reset() {
-			super.reset();
-			this.coords = null;
 		}
 
 
@@ -911,5 +890,6 @@ public class CharConditionPipe {
 		}
 
 	}
+
 
 }

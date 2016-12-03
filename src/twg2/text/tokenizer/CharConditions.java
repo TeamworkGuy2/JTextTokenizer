@@ -62,7 +62,7 @@ public class CharConditions {
 
 
 		@Override
-		public TextFragmentRef getCompleteMatchedTextCoords() {
+		public TextFragmentRef getMatchedTextCoords() {
 			return coords;
 		}
 
@@ -290,7 +290,8 @@ public class CharConditions {
 
 
 
-	/**
+	/** This conditions has two matchers, one for the first character and one for all subsequent characters.
+	 * It continues to read until a non-matching character is encountered.
 	 * @author TeamworkGuy2
 	 * @since 2015-12-13
 	 */
@@ -342,7 +343,7 @@ public class CharConditions {
 
 
 
-	/**
+	/** This conditions continues to read until a non-matching character is encountered.
 	 * @author TeamworkGuy2
 	 * @since 2015-11-27
 	 */
@@ -418,21 +419,18 @@ public class CharConditions {
 	 * @since 2015-2-21
 	 */
 	public static class EndNotPrecededBy extends BaseCharParserMatchable {
-		private final int minPreEndChars;
 
 
-		public EndNotPrecededBy(String name, CharList chars, int minPreEndChars, Inclusion includeCondMatchInRes, CharListReadOnly notPrecededBy) {
+		public EndNotPrecededBy(String name, CharList chars, Inclusion includeCondMatchInRes, CharListReadOnly notPrecededBy) {
 			super(name, chars::contains, null, chars.toArray(), includeCondMatchInRes, null);
 			super.notPreceding = notPrecededBy;
-			this.minPreEndChars = minPreEndChars;
 		}
 
 
 		public EndNotPrecededBy(String name, Predicates.Char charMatcher, Predicates.Char firstCharMatcher,
-				char[] matchChars, int minPreEndChars, Inclusion includeCondMatchInRes, Object toStringSrc, CharListReadOnly notPrecededBy) {
+				char[] matchChars, Inclusion includeCondMatchInRes, Object toStringSrc, CharListReadOnly notPrecededBy) {
 			super(name, charMatcher, firstCharMatcher, matchChars, includeCondMatchInRes, toStringSrc);
 			super.notPreceding = notPrecededBy;
-			this.minPreEndChars = minPreEndChars;
 		}
 
 
@@ -441,6 +439,13 @@ public class CharConditions {
 			if(super.anyComplete || super.failed) {
 				super.failed = true;
 				return false;
+			}
+
+			if(super.matchCount == 0 && buf.hasPrevChar()) {
+				char prevCh = buf.prevChar();
+				if(super.notPreceding.contains(prevCh)) {
+					super.lastCharNotMatch = true;
+				}
 			}
 
 			if(super.notPreceding.contains(ch)) {
@@ -452,8 +457,7 @@ public class CharConditions {
 				return true;
 			}
 
-			// reverse iterate through the bag so we don't have to adjust the loop counter when we remove elements
-			super.anyComplete = super.charMatcher.test(ch) && (this.minPreEndChars == 0 || super.matchCount >= this.minPreEndChars);
+			super.anyComplete = super.charMatcher.test(ch);
 
 			super.acceptedMatchOrCompleteChar(ch, buf);
 
@@ -463,7 +467,8 @@ public class CharConditions {
 
 		@Override
 		public EndNotPrecededBy copy() {
-			val copy = new EndNotPrecededBy(super.name, super.charMatcher, super.origMatcher, super.firstMatchChars, this.minPreEndChars, super.includeMatchInRes, super.toStringSrc, super.notPreceding);
+			val copy = new EndNotPrecededBy(super.name, super.charMatcher, super.origMatcher,
+					super.firstMatchChars, super.includeMatchInRes, super.toStringSrc, super.notPreceding);
 			BaseCharParserMatchable.copyTo(this, copy);
 			return copy;
 		}
