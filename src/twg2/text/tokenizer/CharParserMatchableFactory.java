@@ -7,9 +7,9 @@ import java.util.Map.Entry;
 import lombok.Getter;
 import lombok.val;
 import twg2.collections.builder.ListUtil;
-import twg2.functions.BiPredicates;
 import twg2.parser.condition.text.CharParser;
 import twg2.parser.condition.text.CharParserMatchable;
+import twg2.parser.condition.text.CharParserPredicate;
 import twg2.parser.textParser.TextParser;
 import twg2.tuple.Tuples;
 
@@ -23,7 +23,7 @@ public class CharParserMatchableFactory<P extends CharParser> implements CharPar
 	@SuppressWarnings("unused")
 	private String name;
 	private List<P> conditions;
-	private List<BiPredicates.CharObject<TextParser>> firstCharConds;
+	private List<CharParserPredicate> firstCharConds;
 	private CharParser conditionSet;
 	private @Getter boolean compound;
 
@@ -35,7 +35,7 @@ public class CharParserMatchableFactory<P extends CharParser> implements CharPar
 
 
 	@SafeVarargs
-	public CharParserMatchableFactory(String name, boolean compound, Entry<BiPredicates.CharObject<TextParser>, P>... parserConditions) {
+	public CharParserMatchableFactory(String name, boolean compound, Entry<CharParserPredicate, P>... parserConditions) {
 		this.name = name;
 		this.compound = compound;
 		this.conditions = new ArrayList<>();
@@ -62,7 +62,7 @@ public class CharParserMatchableFactory<P extends CharParser> implements CharPar
 	}
 
 
-	public void add(BiPredicates.CharObject<TextParser> firstCharTest, P parserCondition) {
+	public void add(CharParserPredicate firstCharTest, P parserCondition) {
 		this.conditions.add(parserCondition);
 		this.firstCharConds.add(firstCharTest);
 	}

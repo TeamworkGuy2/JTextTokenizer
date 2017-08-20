@@ -7,11 +7,10 @@ import java.util.Map.Entry;
 import lombok.val;
 import twg2.collections.builder.ListUtil;
 import twg2.collections.primitiveCollections.CharArrayList;
-import twg2.functions.BiPredicates;
 import twg2.parser.Inclusion;
 import twg2.parser.condition.text.CharParser;
 import twg2.parser.condition.text.CharParserMatchable;
-import twg2.parser.textParser.TextParser;
+import twg2.parser.condition.text.CharParserPredicate;
 import twg2.tuple.Tuples;
 
 /**
@@ -20,7 +19,7 @@ import twg2.tuple.Tuples;
  */
 public class StringParserBuilder {
 	private List<CharParser> stringConds;
-	private List<BiPredicates.CharObject<TextParser>> stringStartFilters;
+	private List<CharParserPredicate> stringStartFilters;
 	private String name;
 
 
@@ -33,7 +32,7 @@ public class StringParserBuilder {
 
 	public CharParserFactory build() {
 		@SuppressWarnings("unchecked")
-		Entry<BiPredicates.CharObject<TextParser>, CharParser>[] conditions = ListUtil.combineArray(stringStartFilters, stringConds, Tuples::of, new Entry[stringConds.size()]);
+		Entry<CharParserPredicate, CharParser>[] conditions = ListUtil.combineArray(stringStartFilters, stringConds, Tuples::of, new Entry[stringConds.size()]);
 		return new CharParserMatchableFactory<>(name, false, conditions);
 	}
 

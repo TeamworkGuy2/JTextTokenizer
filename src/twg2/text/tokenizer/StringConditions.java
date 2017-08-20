@@ -6,10 +6,10 @@ import java.util.Collection;
 import lombok.val;
 import twg2.arrays.ArrayUtil;
 import twg2.collections.dataStructures.Bag;
-import twg2.functions.BiPredicates;
 import twg2.parser.Inclusion;
 import twg2.parser.condition.text.CharParser;
 import twg2.parser.condition.text.CharParserMatchable;
+import twg2.parser.condition.text.CharParserPredicate;
 import twg2.parser.textFragment.TextFragmentRef;
 import twg2.parser.textFragment.TextFragmentRefImplMut;
 import twg2.parser.textParser.TextParser;
@@ -38,7 +38,7 @@ public class StringConditions {
 		Inclusion includeMatchInRes;
 		StringBuilder dstBuf = new StringBuilder();
 		TextFragmentRefImplMut coords = new TextFragmentRefImplMut();
-		BiPredicates.CharObject<TextParser> firstCharMatcher;
+		CharParserPredicate firstCharMatcher;
 		String name;
 
 
@@ -90,7 +90,7 @@ public class StringConditions {
 
 
 		@Override
-		public BiPredicates.CharObject<TextParser> getFirstCharMatcher() {
+		public CharParserPredicate getFirstCharMatcher() {
 			return firstCharMatcher;
 		}
 

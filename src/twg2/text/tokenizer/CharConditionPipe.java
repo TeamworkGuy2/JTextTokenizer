@@ -7,10 +7,10 @@ import java.util.List;
 
 import lombok.val;
 import twg2.collections.builder.ListBuilder;
-import twg2.functions.BiPredicates;
 import twg2.parser.condition.ParserCondition;
 import twg2.parser.condition.text.CharParser;
 import twg2.parser.condition.text.CharParserMatchable;
+import twg2.parser.condition.text.CharParserPredicate;
 import twg2.parser.textFragment.TextFragmentRef;
 import twg2.parser.textFragment.TextFragmentRefImplMut;
 import twg2.parser.textParser.TextParser;
@@ -276,7 +276,7 @@ public class CharConditionPipe {
 	 * @since 2015-2-22
 	 */
 	public static abstract class BasePipeMatchable<T extends CharParser> extends BasePipe<T> implements CharParserMatchable {
-		private BiPredicates.CharObject<TextParser> firstCharFilter;
+		private CharParserPredicate firstCharFilter;
 		private TextFragmentRefImplMut coords = null;
 
 
@@ -324,7 +324,7 @@ public class CharConditionPipe {
 
 
 		@Override
-		public BiPredicates.CharObject<TextParser> getFirstCharMatcher() {
+		public CharParserPredicate getFirstCharMatcher() {
 			return this.firstCharFilter;
 		}
 

@@ -6,11 +6,11 @@ import lombok.val;
 import twg2.arrays.ArrayUtil;
 import twg2.collections.primitiveCollections.CharList;
 import twg2.collections.primitiveCollections.CharListReadOnly;
-import twg2.functions.BiPredicates;
-import twg2.functions.Predicates;
+import twg2.functions.predicates.CharPredicate;
 import twg2.parser.Inclusion;
 import twg2.parser.condition.text.CharParser;
 import twg2.parser.condition.text.CharParserMatchable;
+import twg2.parser.condition.text.CharParserPredicate;
 import twg2.parser.textFragment.TextFragmentRef;
 import twg2.parser.textFragment.TextFragmentRefImplMut;
 import twg2.parser.textParser.TextParser;
@@ -41,12 +41,12 @@ public class CharConditions {
 		TextFragmentRefImplMut coords = new TextFragmentRefImplMut();
 		StringBuilder dstBuf = new StringBuilder();
 		/** Sets up accept and reset functions given this object */
-		Predicates.Char charMatcher;
+		CharPredicate charMatcher;
 		Object toStringSrc;
 		String name;
 
 
-		public BaseCharParser(String name, Predicates.Char charMatcher, Inclusion includeCondMatchInRes, Object toStringSrc) {
+		public BaseCharParser(String name, CharPredicate charMatcher, Inclusion includeCondMatchInRes, Object toStringSrc) {
 			this.charMatcher = charMatcher;
 			this.anyComplete = false;
 			this.includeMatchInRes = includeCondMatchInRes;
@@ -169,8 +169,8 @@ public class CharConditions {
 	 */
 	public static abstract class BaseCharParserMatchable extends BaseCharParser implements CharParserMatchable {
 		char[] firstMatchChars;
-		Predicates.Char origMatcher;
-		BiPredicates.CharObject<TextParser> firstCharMatcher;
+		CharPredicate origMatcher;
+		CharParserPredicate firstCharMatcher;
 
 
 		public BaseCharParserMatchable(String name, CharList chars, Inclusion includeCondMatchInRes) {
@@ -178,7 +178,7 @@ public class CharConditions {
 		}
 
 
-		public BaseCharParserMatchable(String name, Predicates.Char charMatcher, Predicates.Char firstCharMatcher, char[] firstMatchChars, Inclusion includeCondMatchInRes, Object toStringSrc) {
+		public BaseCharParserMatchable(String name, CharPredicate charMatcher, CharPredicate firstCharMatcher, char[] firstMatchChars, Inclusion includeCondMatchInRes, Object toStringSrc) {
 			super(name, charMatcher, includeCondMatchInRes, toStringSrc);
 			this.firstMatchChars = firstMatchChars;
 			this.firstCharMatcher = (char ch, TextParser buf) -> {
@@ -189,7 +189,7 @@ public class CharConditions {
 
 
 		@Override
-		public BiPredicates.CharObject<TextParser> getFirstCharMatcher() {
+		public CharParserPredicate getFirstCharMatcher() {
 			return firstCharMatcher;
 		}
 
@@ -226,7 +226,7 @@ public class CharConditions {
 		}
 
 
-		public Start(String name, Predicates.Char charMatcher, Predicates.Char firstCharMatcher,
+		public Start(String name, CharPredicate charMatcher, CharPredicate firstCharMatcher,
 				char[] matchChars, Inclusion includeCondMatchInRes, Object toStringSrc) {
 			super(name, charMatcher, firstCharMatcher, matchChars, includeCondMatchInRes, toStringSrc);
 		}
@@ -273,7 +273,7 @@ public class CharConditions {
 		}
 
 
-		public Literal(String name, Predicates.Char charMatcher, Predicates.Char firstCharMatcher,
+		public Literal(String name, CharPredicate charMatcher, CharPredicate firstCharMatcher,
 				char[] matchChars, Inclusion includeCondMatchInRes, Object toStringSrc) {
 			super(name, charMatcher, firstCharMatcher, matchChars, includeCondMatchInRes, toStringSrc);
 		}
@@ -302,7 +302,7 @@ public class CharConditions {
 		}
 
 
-		public ContainsFirstSpecial(String name, Predicates.Char charMatcher, Predicates.Char firstCharMatcher,
+		public ContainsFirstSpecial(String name, CharPredicate charMatcher, CharPredicate firstCharMatcher,
 				char[] matchChars, Inclusion includeCondMatchInRes, Object toStringSrc) {
 			super(name, charMatcher, firstCharMatcher, matchChars, includeCondMatchInRes, toStringSrc);
 		}
@@ -354,7 +354,7 @@ public class CharConditions {
 		}
 
 
-		public Contains(String name, Predicates.Char charMatcher,
+		public Contains(String name, CharPredicate charMatcher,
 				char[] matchChars, Inclusion includeCondMatchInRes, Object toStringSrc) {
 			super(name, charMatcher, charMatcher, matchChars, includeCondMatchInRes, toStringSrc);
 		}
@@ -382,7 +382,7 @@ public class CharConditions {
 		}
 
 
-		public End(String name, Predicates.Char charMatcher, Predicates.Char firstCharMatcher,
+		public End(String name, CharPredicate charMatcher, CharPredicate firstCharMatcher,
 				char[] matchChars, Inclusion includeCondMatchInRes, Object toStringSrc) {
 			super(name, charMatcher, firstCharMatcher, matchChars, includeCondMatchInRes, toStringSrc);
 		}
@@ -427,7 +427,7 @@ public class CharConditions {
 		}
 
 
-		public EndNotPrecededBy(String name, Predicates.Char charMatcher, Predicates.Char firstCharMatcher,
+		public EndNotPrecededBy(String name, CharPredicate charMatcher, CharPredicate firstCharMatcher,
 				char[] matchChars, Inclusion includeCondMatchInRes, Object toStringSrc, CharListReadOnly notPrecededBy) {
 			super(name, charMatcher, firstCharMatcher, matchChars, includeCondMatchInRes, toStringSrc);
 			super.notPreceding = notPrecededBy;

@@ -1,7 +1,6 @@
 package twg2.text.tokenizer;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map.Entry;
 
 import lombok.AllArgsConstructor;
@@ -125,19 +124,6 @@ public class CharMultiConditionParser {
 		}
 
 		return charsRead;
-	}
-
-
-	private static final boolean allCompound(List<CharParserFactory> conds, int off, int len) {
-		if(len < 1) {
-			return true;
-		}
-		for(int i = off, size = off + len; i < size; i++) {
-			if(!conds.get(i).isCompound()) {
-				return false;
-			}
-		}
-		return true;
 	}
 
 
