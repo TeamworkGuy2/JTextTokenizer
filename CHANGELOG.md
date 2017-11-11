@@ -4,7 +4,17 @@ This project does its best to adhere to [Semantic Versioning](http://semver.org/
 
 
 --------
-### [0.2.1](N/A) - 2017-08-20
+### [0.2.2](N/A) - 2017-11-11
+#### Changed
+* Removed lombok dependency
+* Updated README with notes about each class
+
+#### Fixed
+* `StringConditions.End` was failing when a sequence of matching characters was found followed by another valid character that required the existing sequence to be re-parsed and some characters potentially dropped from the current match (i.e. parser '-->' when parsing '<!-- comment --->')
+
+
+--------
+### [0.2.1](https://github.com/TeamworkGuy2/JTextTokenizer/commit/75540ad7a40e512371cbb51902ff6309f77cf11e) - 2017-08-20
 #### Changed
 * Update dependency `jfunc@0.3.0` (`Predicates.Char` -> `CharPredicate`)
 

@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
 
-import lombok.val;
 import twg2.collections.builder.ListUtil;
 import twg2.collections.primitiveCollections.CharArrayList;
 import twg2.parser.Inclusion;
@@ -38,7 +37,7 @@ public class StringParserBuilder {
 
 
 	public StringParserBuilder addStringLiteralMarker(String name, String str) {
-		val cond = new StringConditions.Literal(name, new String[] { str }, Inclusion.INCLUDE);
+		StringConditions.Literal cond = new StringConditions.Literal(name, new String[] { str }, Inclusion.INCLUDE);
 		this.stringConds.add(cond);
 		this.stringStartFilters.add(cond.getFirstCharMatcher());
 		return this;
@@ -46,7 +45,7 @@ public class StringParserBuilder {
 
 
 	public StringParserBuilder addCharLiteralMarker(String name, char start) {
-		val cond = new CharConditions.Literal(name, CharArrayList.of(start), Inclusion.INCLUDE);
+		CharConditions.Literal cond = new CharConditions.Literal(name, CharArrayList.of(start), Inclusion.INCLUDE);
 		this.stringConds.add(cond);
 		this.stringStartFilters.add(cond.getFirstCharMatcher());
 		return this;
@@ -54,7 +53,7 @@ public class StringParserBuilder {
 
 
 	public StringParserBuilder addCharMatcher(String name, char[] chars) {
-		val cond = new CharConditions.Contains(name, CharArrayList.of(chars), Inclusion.INCLUDE);
+		CharConditions.Contains cond = new CharConditions.Contains(name, CharArrayList.of(chars), Inclusion.INCLUDE);
 		this.stringConds.add(cond);
 		this.stringStartFilters.add(cond.getFirstCharMatcher());
 		return this;

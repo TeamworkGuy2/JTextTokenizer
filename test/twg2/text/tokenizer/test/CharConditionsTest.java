@@ -1,7 +1,6 @@
 package twg2.text.tokenizer.test;
 
 import static twg2.text.tokenizer.test.ParserTestUtils.parseTest;
-import lombok.val;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -62,7 +61,7 @@ public class CharConditionsTest {
 	@Test
 	public void testCharEndNotPrecededByCondition() {
 		String name = "EndNotPrecededByCondition";
-		val notPreced = CharArrayList.of('\\', '@');
+		CharArrayList notPreced = CharArrayList.of('\\', '@');
 		CharParser cond = new CharConditions.EndNotPrecededBy(name, CharArrayList.of('\'', '"', '!'), Inclusion.INCLUDE, notPreced);
 
 		parseTest(false, false, name, cond, "abc@'");

@@ -60,14 +60,15 @@ public class StringConditionsTest {
 	public void testEndStringCondition() {
 		String[] endMarkers = new String[] {
 				"-->",
-				"\"\"\"",
+				"\"\"",
 				"!#"
 		};
 
 		String[] testStrs = new String[] {
-				"<!-- comment -->",
+				"<!-- comment --->",
 				"\"stuff\"\"\"",
-				"!#", "!#="
+				"!#",
+				"!#="
 		};
 
 		Boolean[] expect = { true, true, true, false };
@@ -76,15 +77,13 @@ public class StringConditionsTest {
 
 		int i = 0;
 		for(String testStr : testStrs) {
-			for(int ii = 0, size = endMarkers.length; ii < size; ii++) {
-				TextParser pos = TextIteratorParser.of(testStr);
-				while(pos.hasNext()) {
-					char ch = pos.nextChar();
-					cond.acceptNext(ch, pos);
-				}
-				Assert.assertTrue(i + "." + ii, cond.isComplete() == expect[i]);
-				cond = cond.copyOrReuse();
+			TextParser pos = TextIteratorParser.of(testStr);
+			while(pos.hasNext()) {
+				char ch = pos.nextChar();
+				cond.acceptNext(ch, pos);
 			}
+			Assert.assertTrue("'" + testStr + "' complete: " + cond.isComplete() + ", expected: " + expect[i], cond.isComplete() == expect[i]);
+			cond = cond.copyOrReuse();
 			i++;
 		}
 	}

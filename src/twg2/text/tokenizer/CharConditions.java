@@ -2,7 +2,6 @@ package twg2.text.tokenizer;
 
 import java.util.Arrays;
 
-import lombok.val;
 import twg2.arrays.ArrayUtil;
 import twg2.collections.primitiveCollections.CharList;
 import twg2.collections.primitiveCollections.CharListReadOnly;
@@ -104,6 +103,12 @@ public class CharConditions {
 		}
 
 
+		@Override
+		public String toString() {
+			return "one " + (toStringSrc != null ? toStringSrc.toString() : charMatcher);
+		}
+
+
 		// package-private
 		void acceptedCompletedChar(char ch, TextParser buf) {
 			if(this.matchCount == 0) {
@@ -141,12 +146,6 @@ public class CharConditions {
 			lastCharNotMatch = false;
 			coords = new TextFragmentRefImplMut();
 			dstBuf.setLength(0);
-		}
-
-
-		@Override
-		public String toString() {
-			return "one " + (toStringSrc != null ? toStringSrc.toString() : charMatcher);
 		}
 
 
@@ -255,8 +254,7 @@ public class CharConditions {
 
 		@Override
 		public Start copy() {
-			val copy = new Start(super.name, super.charMatcher, super.origMatcher, super.firstMatchChars, super.includeMatchInRes, super.toStringSrc);
-			return copy;
+			return new Start(super.name, super.charMatcher, super.origMatcher, super.firstMatchChars, super.includeMatchInRes, super.toStringSrc);
 		}
 
 	}
@@ -281,8 +279,7 @@ public class CharConditions {
 
 		@Override
 		public Literal copy() {
-			val copy = new Literal(super.name, super.charMatcher, super.origMatcher, super.firstMatchChars, super.includeMatchInRes, super.toStringSrc);
-			return copy;
+			return new Literal(super.name, super.charMatcher, super.origMatcher, super.firstMatchChars, super.includeMatchInRes, super.toStringSrc);
 		}
 
 	}
@@ -334,8 +331,7 @@ public class CharConditions {
 
 		@Override
 		public ContainsFirstSpecial copy() {
-			val copy = new ContainsFirstSpecial(super.name, super.charMatcher, super.origMatcher, super.firstMatchChars, super.includeMatchInRes, super.toStringSrc);
-			return copy;
+			return new ContainsFirstSpecial(super.name, super.charMatcher, super.origMatcher, super.firstMatchChars, super.includeMatchInRes, super.toStringSrc);
 		}
 
 	}
@@ -362,8 +358,7 @@ public class CharConditions {
 
 		@Override
 		public Contains copy() {
-			val copy = new Contains(super.name, super.charMatcher, super.firstMatchChars, super.includeMatchInRes, super.toStringSrc);
-			return copy;
+			return new Contains(super.name, super.charMatcher, super.firstMatchChars, super.includeMatchInRes, super.toStringSrc);
 		}
 
 	}
@@ -405,8 +400,7 @@ public class CharConditions {
 
 		@Override
 		public End copy() {
-			val copy = new End(super.name, super.charMatcher, super.origMatcher, super.firstMatchChars, super.includeMatchInRes, super.toStringSrc);
-			return copy;
+			return new End(super.name, super.charMatcher, super.origMatcher, super.firstMatchChars, super.includeMatchInRes, super.toStringSrc);
 		}
 
 	}
@@ -467,7 +461,7 @@ public class CharConditions {
 
 		@Override
 		public EndNotPrecededBy copy() {
-			val copy = new EndNotPrecededBy(super.name, super.charMatcher, super.origMatcher,
+			EndNotPrecededBy copy = new EndNotPrecededBy(super.name, super.charMatcher, super.origMatcher,
 					super.firstMatchChars, super.includeMatchInRes, super.toStringSrc, super.notPreceding);
 			BaseCharParserMatchable.copyTo(this, copy);
 			return copy;

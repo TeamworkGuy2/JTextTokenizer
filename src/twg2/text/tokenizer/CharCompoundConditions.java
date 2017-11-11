@@ -2,7 +2,6 @@ package twg2.text.tokenizer;
 
 import java.util.Collection;
 
-import lombok.val;
 import twg2.collections.dataStructures.Bag;
 import twg2.parser.condition.text.CharParser;
 import twg2.parser.textFragment.TextFragmentRef;
@@ -105,6 +104,12 @@ public class CharCompoundConditions {
 		}
 
 
+		@Override
+		public String toString() {
+			return StringJoin.join(originalConds, ", or ");
+		}
+
+
 		// package-private
 		void reset() {
 			matchingConds.clearAndAddAll(originalConds);
@@ -120,9 +125,30 @@ public class CharCompoundConditions {
 		}
 
 
-		@Override
-		public String toString() {
-			return StringJoin.join(originalConds, ", or ");
+		/** Remove {@code matches} who's {@link CharParser#acceptNext(char, TextParser)} method return false for {@code ch}
+		 * @return 0 if no match, 1 if match found, 2 if match completed
+		 */
+		static byte updateMatches(char ch, TextParser buf, Bag<CharParser> matches) {
+			byte found = 0;
+			// reverse iterate through the bag so we don't have to adjust the loop variable when we remove elements
+			for(int i = matches.size() - 1; i > -1; i--) {
+				CharParser cond = matches.get(i);
+				if(!cond.isFailed()) {
+					if(!cond.acceptNext(ch, buf)) {
+						matches.remove(i);
+					}
+					else {
+						found = 1;
+						if(cond.isComplete()) {
+							found = 2;
+						}
+					}
+				}
+				else {
+					matches.remove(i);
+				}
+			}
+			return found;
 		}
 
 	}
@@ -143,8 +169,7 @@ public class CharCompoundConditions {
 
 		@Override
 		public Filter copy() {
-			val copy = new Filter(name, true, originalConds);
-			return copy;
+			return new Filter(name, true, originalConds);
 		}
 
 	}
@@ -168,28 +193,13 @@ public class CharCompoundConditions {
 				super.failed = true;
 				return false;
 			}
-			boolean anyFound = false;
-			Bag<CharParser> matchingConds = super.matchingConds;
-			// reverse iterate through the bag so we don't have to adjust the loop variable when we remove elements
-			for(int i = matchingConds.size() - 1; i > -1; i--) {
-				val condI = matchingConds.get(i);
-				if(!condI.isFailed()) {
-					if(!condI.acceptNext(ch, buf)) {
-						matchingConds.remove(i);
-					}
-					else {
-						anyFound = true;
-						if(condI.isComplete()) {
-							super.anyComplete = true;
-						}
-					}
-				}
-				else {
-					matchingConds.remove(i);
-				}
+
+			byte found = updateMatches(ch, buf, super.matchingConds);
+			if(found == 2) {
+				super.anyComplete = true;
 			}
 
-			if(anyFound) {
+			if(found > 0) {
 				if(super.acceptedCount == 0) {
 					super.coords.setStart(buf);
 				}
@@ -216,8 +226,7 @@ public class CharCompoundConditions {
 
 		@Override
 		public StartFilter copy() {
-			val copy = new StartFilter(super.name, true, super.originalConds);
-			return copy;
+			return new StartFilter(super.name, true, super.originalConds);
 		}
 
 	}
@@ -242,28 +251,13 @@ public class CharCompoundConditions {
 				super.failed = true;
 				return false;
 			}
-			boolean anyFound = false;
-			Bag<CharParser> matchingConds = super.matchingConds;
-			// reverse iterate through the bag so we don't have to adjust the loop variable when we remove elements
-			for(int i = matchingConds.size() - 1; i > -1; i--) {
-				CharParser condI = matchingConds.get(i);
-				if(!condI.isFailed()) {
-					if(!condI.acceptNext(ch, buf)) {
-						matchingConds.remove(i);
-					}
-					else {
-						anyFound = true;
-						if(condI.isComplete()) {
-							super.anyComplete = true;
-						}
-					}
-				}
-				else {
-					matchingConds.remove(i);
-				}
+
+			byte found = updateMatches(ch, buf, super.matchingConds);
+			if(found == 2) {
+				super.anyComplete = true;
 			}
 
-			if(anyFound) {
+			if(found > 0) {
 				if(super.acceptedCount == 0) {
 					super.coords.setStart(buf);
 				}
@@ -282,8 +276,7 @@ public class CharCompoundConditions {
 
 		@Override
 		public EndFilter copy() {
-			val copy = new EndFilter(this.name, true, this.originalConds);
-			return copy;
+			return new EndFilter(this.name, true, this.originalConds);
 		}
 
 	}

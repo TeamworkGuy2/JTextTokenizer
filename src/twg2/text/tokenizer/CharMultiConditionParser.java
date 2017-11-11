@@ -3,7 +3,6 @@ package twg2.text.tokenizer;
 import java.util.Collection;
 import java.util.Map.Entry;
 
-import lombok.AllArgsConstructor;
 import twg2.collections.dataStructures.PairList;
 import twg2.parser.condition.text.CharParser;
 import twg2.parser.textFragment.TextConsumer;
@@ -27,11 +26,17 @@ public class CharMultiConditionParser {
 	 * @author TeamworkGuy2
 	 * @since 2016-09-08
 	 */
-	@AllArgsConstructor
 	static class MatcherState {
 		int startOff;
 		CharParser parser;
 		TextConsumer consumer;
+
+		public MatcherState(int startOff, CharParser parser, TextConsumer consumer) {
+			this.startOff = startOff;
+			this.parser = parser;
+			this.consumer = consumer;
+		}
+
 	}
 
 

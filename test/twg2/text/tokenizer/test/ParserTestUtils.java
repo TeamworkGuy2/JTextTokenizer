@@ -1,7 +1,5 @@
 package twg2.text.tokenizer.test;
 
-import lombok.val;
-
 import org.junit.Assert;
 
 import twg2.parser.condition.text.CharParser;
@@ -46,13 +44,13 @@ public interface ParserTestUtils {
 			cond.acceptNext(ch, buf);
 		}
 
-		val isComplete = cond.isComplete();
+		boolean isComplete = cond.isComplete();
 		Assert.assertEquals(name + " '" + src + "' isComplete() ", expectComplete, isComplete);
-		val isFailed = cond.isFailed();
+		boolean isFailed = cond.isFailed();
 		Assert.assertEquals(name + " '" + src + "' isFailed() ", expectFailed, isFailed);
 
 		if(isComplete && srcExpect != null) {
-			val parsedText = cond.getMatchedTextCoords().getText(src);
+			CharSequence parsedText = cond.getMatchedTextCoords().getText(src);
 			Assert.assertEquals(srcExpect, parsedText);
 		}
 	}

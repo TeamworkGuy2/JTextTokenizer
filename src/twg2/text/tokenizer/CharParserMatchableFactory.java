@@ -2,10 +2,9 @@ package twg2.text.tokenizer;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 
-import lombok.Getter;
-import lombok.val;
 import twg2.collections.builder.ListUtil;
 import twg2.parser.condition.text.CharParser;
 import twg2.parser.condition.text.CharParserMatchable;
@@ -14,8 +13,8 @@ import twg2.parser.textParser.TextParser;
 import twg2.tuple.Tuples;
 
 /** A collection of {@link CharParser}s.
- * Accepts {@link CharParserMatchable} or custom behavior similar to {@link twg2.parser.condition.text.CharParserMatchable#getFirstCharMatcher()}
- * via separate function associated with {@link CharParser} arguments
+ * Accepts {@link CharParserMatchable} or custom behavior similar to {@link CharParserMatchable#getFirstCharMatcher()}
+ * via separate function associated with {@link CharParser} arguments.
  * @author TeamworkGuy2
  * @since 2016-2-21
  */
@@ -25,7 +24,7 @@ public class CharParserMatchableFactory<P extends CharParser> implements CharPar
 	private List<P> conditions;
 	private List<CharParserPredicate> firstCharConds;
 	private CharParser conditionSet;
-	private @Getter boolean compound;
+	private boolean compound;
 
 
 	@SuppressWarnings("unchecked")
@@ -51,7 +50,7 @@ public class CharParserMatchableFactory<P extends CharParser> implements CharPar
 			@SuppressWarnings("unchecked")
 			P[] conds = (P[])new CharParser[parserConditions.length];
 			int i = 0;
-			for(val entry : parserConditions) {
+			for(Map.Entry<CharParserPredicate, P> entry : parserConditions) {
 				conds[i] = entry.getValue();
 				this.firstCharConds.add(entry.getKey());
 				this.conditions.add(entry.getValue());
@@ -59,6 +58,12 @@ public class CharParserMatchableFactory<P extends CharParser> implements CharPar
 			}
 			this.conditionSet = new CharCompoundConditions.StartFilter(name, false, conds);
 		}
+	}
+
+
+	@Override
+	public boolean isCompound() {
+		return compound;
 	}
 
 
