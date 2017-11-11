@@ -4,7 +4,13 @@ This project does its best to adhere to [Semantic Versioning](http://semver.org/
 
 
 --------
-### [0.2.2](N/A) - 2017-11-11
+### [0.2.3](N/A) - 2017-11-11
+#### Fixed
+* Another fix for `StringConditions.End` corner case when one character has been matched and the next character isn't a match, but is a match if we restart matching
+
+
+--------
+### [0.2.2](https://github.com/TeamworkGuy2/JTextTokenizer/commit/5ffff76d35775c494897e82dad1b57050a82ebb5) - 2017-11-11
 #### Changed
 * Removed lombok dependency
 * Updated README with notes about each class

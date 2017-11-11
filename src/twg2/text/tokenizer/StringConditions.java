@@ -302,12 +302,14 @@ public class StringConditions {
 		}
 
 
-		/** Check for a shorter matching sequence in currently matched chars and update this end condition's buffer and coords to start at the shorter sub-match
+		/** Check for a shorter matching sequence in currently matched chars and update this end condition's buffer and coords to start at the shorter sub-match.
+		 * This is what makes the ends-with condition non-greedy.
 		 * @return true if a shorter match exists
 		 */
 		private boolean findMoreRecentMatch(char ch, TextParser buf) {
 			// start i = 1 because this method should only get called when current sequence is a match and another characters is available
-			for(int i = 1, size = super.dstBuf.length(); i < size; i++) {
+			// OR (i == 1 && size == 1) supports the case when 1 character has been matched and the next 'ch' doesn't match, but 'ch' might match with the beginning of this condition
+			for(int i = 1, size = super.dstBuf.length(); i < size || (i == 1 && size == 1); i++) {
 				this.partialReset();
 				for(int j = i; j < size; j++) {
 					byte found = updateMatches(super.dstBuf.charAt(j), j - i, super.matchingStrs);

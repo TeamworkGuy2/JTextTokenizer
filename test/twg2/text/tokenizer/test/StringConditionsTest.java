@@ -17,7 +17,7 @@ public class StringConditionsTest {
 
 
 	@Test
-	public void testStartStringCondition() {
+	public void startStringCondition() {
 		String[] startMarkers = new String[] {
 				"//",
 				"\"",
@@ -57,7 +57,7 @@ public class StringConditionsTest {
 
 
 	@Test
-	public void testEndStringCondition() {
+	public void endStringCondition() {
 		String[] endMarkers = new String[] {
 				"-->",
 				"\"\"",
@@ -67,11 +67,13 @@ public class StringConditionsTest {
 		String[] testStrs = new String[] {
 				"<!-- comment --->",
 				"\"stuff\"\"\"",
+				"\"\"",
 				"!#",
+				"!!#",
 				"!#="
 		};
 
-		Boolean[] expect = { true, true, true, false };
+		Boolean[] expect = { true, true, true, true, true, false };
 
 		CharParser cond = new StringConditions.End("testEndStringCondition", endMarkers, Inclusion.INCLUDE);
 

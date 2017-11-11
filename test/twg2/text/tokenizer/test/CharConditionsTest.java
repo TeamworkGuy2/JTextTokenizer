@@ -20,7 +20,7 @@ public class CharConditionsTest {
 
 
 	@Test
-	public void testStartCharCondition() {
+	public void startCharCondition() {
 		char[] startMarkers = new char[] {
 				'\'', '"', ','
 		};
@@ -47,7 +47,7 @@ public class CharConditionsTest {
 
 
 	@Test
-	public void testEndCharCondition() {
+	public void endCharCondition() {
 		String name = "EndCharCondition";
 		CharParser cond = new CharConditions.End(name, CharArrayList.of('\'', '"', '!'), Inclusion.INCLUDE);
 
@@ -59,7 +59,7 @@ public class CharConditionsTest {
 
 
 	@Test
-	public void testCharEndNotPrecededByCondition() {
+	public void charEndNotPrecededByCondition() {
 		String name = "EndNotPrecededByCondition";
 		CharArrayList notPreced = CharArrayList.of('\\', '@');
 		CharParser cond = new CharConditions.EndNotPrecededBy(name, CharArrayList.of('\'', '"', '!'), Inclusion.INCLUDE, notPreced);
