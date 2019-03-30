@@ -9,6 +9,8 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import twg2.arrays.ArrayUtil;
+import twg2.junitassist.checks.CheckTask;
+import twg2.junitassist.checks.TestData;
 import twg2.parser.Inclusion;
 import twg2.parser.condition.text.CharParser;
 import twg2.parser.textParser.TextIteratorParser;
@@ -18,8 +20,6 @@ import twg2.text.stringSearch.StringCompare;
 import twg2.text.stringSearch.StringIndex;
 import twg2.text.tokenizer.CharParserFactory;
 import twg2.text.tokenizer.StringBoundedParserBuilder;
-import checks.CheckTask;
-import checks.TestData;
 
 /**
  * @author TeamworkGuy2
@@ -86,7 +86,9 @@ public class MiscStringTests {
 		String[] strs = new String[] {   "\"a \\\" b \\\"", "\"\" !", "alpha", "\"a \n\\\"\\\" z\" echo" };
 		String[] expect = new String[] { "\"a \" b \"",       "\"\"",     "",      "\"a \n\"\" z\"" };
 
-		CharParserFactory parser1 = new StringBoundedParserBuilder("stringBoundedSegmentParserTest").addStartEndNotPrecededByMarkers("string literal", '"', '\\', '"', Inclusion.INCLUDE).build();
+		var sbpb = new StringBoundedParserBuilder("stringBoundedSegmentParserTest");
+		sbpb.addStartEndNotPrecededByMarkers("string literal", '"', '\\', '"', Inclusion.INCLUDE);
+		CharParserFactory parser1 = sbpb.build();
 
 		Function<String, String> escSeqDecoder = EscapeSequences.unicodeEscapeDecoder();
 		CheckTask.assertTests(strs, expect, (String s, Integer i) -> {

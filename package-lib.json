@@ -1,5 +1,5 @@
 {
-	"version" : "0.2.3",
+	"version" : "0.3.0",
 	"name" : "jtext-tokenizer",
 	"description" : "CharParser and CharParserFactory implementations (jtext-parser library) for text tokenization",
 	"homepage" : "https://github.com/TeamworkGuy2/JTextTokenizer",

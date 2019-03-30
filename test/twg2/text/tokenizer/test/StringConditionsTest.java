@@ -32,9 +32,9 @@ public class StringConditionsTest {
 				" !#"
 		};
 
-		Boolean[] expect = { true, true, true, false };
+		boolean[] expect = { true, true, true, false };
 
-		CharParser cond = new StringConditions.Start("testStartStringCondition", startMarkers, Inclusion.INCLUDE);
+		CharParser cond = new StringConditions.Start("StartStringCondition", startMarkers, Inclusion.INCLUDE);
 
 		int i = 0;
 		for(String testStr : testStrs) {
@@ -73,9 +73,9 @@ public class StringConditionsTest {
 				"!#="
 		};
 
-		Boolean[] expect = { true, true, true, true, true, false };
+		boolean[] expect = { true, true, true, true, true, false };
 
-		CharParser cond = new StringConditions.End("testEndStringCondition", endMarkers, Inclusion.INCLUDE);
+		CharParser cond = new StringConditions.End("EndStringCondition", endMarkers, Inclusion.INCLUDE);
 
 		int i = 0;
 		for(String testStr : testStrs) {

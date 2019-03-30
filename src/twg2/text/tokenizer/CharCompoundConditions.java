@@ -2,7 +2,7 @@ package twg2.text.tokenizer;
 
 import java.util.Collection;
 
-import twg2.collections.dataStructures.Bag;
+import twg2.arrays.ArrayManager;
 import twg2.parser.condition.text.CharParser;
 import twg2.parser.textFragment.TextFragmentRef;
 import twg2.parser.textFragment.TextFragmentRefImplMut;
@@ -22,7 +22,8 @@ public class CharCompoundConditions {
 	 */
 	public static abstract class BaseFilter implements CharParser {
 		CharParser[] originalConds;
-		Bag<CharParser> matchingConds;
+		CharParser[] matchingConds;
+		int matchingCondsSize;
 		boolean anyComplete = false;
 		boolean failed = false;
 		int acceptedCount;
@@ -39,18 +40,22 @@ public class CharCompoundConditions {
 
 		@SafeVarargs
 		public BaseFilter(String name, boolean doCopyConds, CharParser... conds) {
+			int condsCnt = conds.length;
 			this.originalConds = conds;
 
 			CharParser[] copyConds = conds;
 			if(doCopyConds) {
-				copyConds = new CharParser[conds.length];
-				for(int i = 0, size = conds.length; i < size; i++) {
+				copyConds = new CharParser[condsCnt];
+				for(int i = 0; i < condsCnt; i++) {
 					copyConds[i] = conds[i].copy();
 				}
 			}
 
-			this.matchingConds = new Bag<>(copyConds, 0, copyConds.length);
-			this.anyComplete = false;
+			this.matchingConds = new CharParser[condsCnt];
+	        System.arraycopy(copyConds, 0, this.matchingConds, 0, condsCnt);
+	        this.matchingCondsSize = condsCnt;
+
+	        this.anyComplete = false;
 			this.name = name;
 		}
 
@@ -112,7 +117,9 @@ public class CharCompoundConditions {
 
 		// package-private
 		void reset() {
-			matchingConds.clearAndAddAll(originalConds);
+			var origCnt = originalConds.length;
+			ArrayManager.clearAndAddAll(matchingConds, originalConds, 0, origCnt);
+			matchingCondsSize = origCnt;
 			anyComplete = false;
 			failed = false;
 			dstBuf.setLength(0);
@@ -128,14 +135,17 @@ public class CharCompoundConditions {
 		/** Remove {@code matches} who's {@link CharParser#acceptNext(char, TextParser)} method return false for {@code ch}
 		 * @return 0 if no match, 1 if match found, 2 if match completed
 		 */
-		static byte updateMatches(char ch, TextParser buf, Bag<CharParser> matches) {
+		private byte updateMatches(char ch, TextParser buf) {
+			var matches = this.matchingConds;
+			int size = this.matchingCondsSize;
 			byte found = 0;
 			// reverse iterate through the bag so we don't have to adjust the loop variable when we remove elements
-			for(int i = matches.size() - 1; i > -1; i--) {
-				CharParser cond = matches.get(i);
+			for(int i = size - 1; i > -1; i--) {
+				CharParser cond = matches[i];
 				if(!cond.isFailed()) {
 					if(!cond.acceptNext(ch, buf)) {
-						matches.remove(i);
+						ArrayManager.removeUnordered(matches, size, i);
+						size--;
 					}
 					else {
 						found = 1;
@@ -145,9 +155,11 @@ public class CharCompoundConditions {
 					}
 				}
 				else {
-					matches.remove(i);
+					ArrayManager.removeUnordered(matches, size, i);
+					size--;
 				}
 			}
+			this.matchingCondsSize = size;
 			return found;
 		}
 
@@ -169,7 +181,7 @@ public class CharCompoundConditions {
 
 		@Override
 		public Filter copy() {
-			return new Filter(name, true, originalConds);
+			return new Filter(super.name, true, super.originalConds);
 		}
 
 	}
@@ -194,7 +206,7 @@ public class CharCompoundConditions {
 				return false;
 			}
 
-			byte found = updateMatches(ch, buf, super.matchingConds);
+			byte found = super.updateMatches(ch, buf);
 			if(found == 2) {
 				super.anyComplete = true;
 			}
@@ -252,7 +264,7 @@ public class CharCompoundConditions {
 				return false;
 			}
 
-			byte found = updateMatches(ch, buf, super.matchingConds);
+			byte found = super.updateMatches(ch, buf);
 			if(found == 2) {
 				super.anyComplete = true;
 			}
@@ -276,7 +288,7 @@ public class CharCompoundConditions {
 
 		@Override
 		public EndFilter copy() {
-			return new EndFilter(this.name, true, this.originalConds);
+			return new EndFilter(super.name, true, super.originalConds);
 		}
 
 	}

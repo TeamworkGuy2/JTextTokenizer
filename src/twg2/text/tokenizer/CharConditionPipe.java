@@ -1,9 +1,7 @@
 package twg2.text.tokenizer;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 
 import twg2.collections.builder.ListBuilder;
 import twg2.parser.condition.ParserCondition;
@@ -22,66 +20,84 @@ import twg2.text.stringUtils.StringJoin;
 public class CharConditionPipe {
 
 	@SafeVarargs
-	public static <S extends CharParser> AllRequired<S> createPipeAllRequired(String name, Iterable<S>... requiredConditionSets) {
-		List<List<S>> requiredSets = new ArrayList<List<S>>();
-		for(Iterable<S> requiredCondSet : requiredConditionSets) {
-			requiredSets.add(ListBuilder.mutable(requiredCondSet));
+	public static <S extends CharParser> AllRequired<S> createPipeAllRequired(String name, Iterable<? extends S>... requiredConditionSets) {
+		var requiredSets = new CharParser[requiredConditionSets.length][];
+		int i = 0;
+		for(Iterable<? extends S> requiredCondSet : requiredConditionSets) {
+			var requiredCondList = ListBuilder.mutable(requiredCondSet);
+			requiredSets[i] = requiredCondList.toArray(new CharParser[requiredCondList.size()]);
+			i++;
 		}
 
-		return new AllRequired<S>(name, requiredSets);
+		return new AllRequired<S>(name, false, requiredSets);
 	}
 
 
-
 	@SafeVarargs
-	public static <S extends CharParser> AllRequiredPlain<S> createPipePlainAllRequired(String name, boolean ignoreFirstConditionCoords, Iterable<S>... requiredConditionSets) {
-		List<List<S>> requiredSets = new ArrayList<List<S>>();
-		for(Iterable<S> requiredCondSet : requiredConditionSets) {
-			requiredSets.add(ListBuilder.mutable(requiredCondSet));
+	public static <S extends CharParser> AllRequiredPlain<S> createPipePlainAllRequired(String name, boolean ignoreFirstConditionCoords, Iterable<? extends S>... requiredConditionSets) {
+		var requiredSets = new CharParser[requiredConditionSets.length][];
+		int i = 0;
+		for(Iterable<? extends S> requiredCondSet : requiredConditionSets) {
+			@SuppressWarnings("unchecked")
+			var requiredCondList = (requiredCondSet instanceof Collection<?> ? (Collection<S>)requiredCondSet : ListBuilder.mutable(requiredCondSet));
+			requiredSets[i] = requiredCondList.toArray(new CharParser[requiredCondList.size()]);
+			i++;
 		}
 
-		return new AllRequiredPlain<S>(name, ignoreFirstConditionCoords, requiredSets);
+		return new AllRequiredPlain<S>(name, false, ignoreFirstConditionCoords, requiredSets);
 	}
 
 
 	public static <S extends CharParser> RepeatableSeparator<S> createPipeRepeatableSeparator(String name, Iterable<? extends S> requiredConditions, Iterable<? extends S> separatorConditions) {
-		List<List<? extends S>> conds = new ArrayList<List<? extends S>>();
-		conds.add(ListBuilder.mutable(requiredConditions));
+		var conds = new CharParser[separatorConditions != null ? 2 : 1][];
+		@SuppressWarnings("unchecked")
+		var requiredCondsList = (requiredConditions instanceof Collection<?> ? (Collection<S>)requiredConditions : ListBuilder.mutable(requiredConditions));
+		conds[0] = requiredCondsList.toArray(new CharParser[requiredCondsList.size()]);
 
 		if(separatorConditions != null) {
-			List<? extends S> separatorSet = ListBuilder.mutable(separatorConditions);
-			conds.add(separatorSet);
+			@SuppressWarnings("unchecked")
+			var separatorSet = (separatorConditions instanceof Collection<?> ? (Collection<S>)separatorConditions : ListBuilder.mutable(separatorConditions));
+			conds[1] = separatorSet.toArray(new CharParser[separatorSet.size()]);
 		}
 
-		return new RepeatableSeparator<S>(name, conds);
+		return new RepeatableSeparator<S>(name, false, conds);
 	}
 
 
-	@SuppressWarnings("unchecked")
 	@SafeVarargs
 	public static <S extends CharParser> OptionalSuffix<S> createPipeOptionalSuffix(String name, Iterable<? extends S> requiredConditions, Iterable<? extends S>... optionalConditions) {
-		List<List<S>> conditionSets = new ArrayList<List<S>>();
-		conditionSets.add(ListBuilder.mutable((Iterable<S>)requiredConditions));
+		var conds = new CharParser[optionalConditions.length + 1][];
+		@SuppressWarnings("unchecked")
+		var requiredCondsList = (requiredConditions instanceof Collection<?> ? (Collection<S>)requiredConditions : ListBuilder.mutable((Iterable<S>)requiredConditions));
+		conds[0] = requiredCondsList.toArray(new CharParser[requiredCondsList.size()]);
 
-		for(Iterable<S> condSet : (Iterable<S>[])optionalConditions) {
-			conditionSets.add(ListBuilder.mutable(condSet));
+		int i = 1;
+		for(Iterable<? extends S> condSet : optionalConditions) {
+			@SuppressWarnings("unchecked")
+			var condList = (condSet instanceof Collection<?> ? (Collection<S>)condSet : ListBuilder.mutable(condSet));
+			conds[i] = condList.toArray(new CharParser[condList.size()]);
+			i++;
 		}
 
-		return new OptionalSuffix<S>(name, conditionSets);
+		return new OptionalSuffix<S>(name, false, conds);
 	}
 
 
 	@SuppressWarnings("unchecked")
 	@SafeVarargs
 	public static <S extends CharParser> BasePipe<S> createPipeOptionalSuffixesAny(String name, Iterable<? extends S> requiredConditions, Iterable<? extends S>... optionalConditions) {
-		List<List<S>> conditionSets = new ArrayList<List<S>>();
-		conditionSets.add(ListBuilder.mutable((Iterable<S>)requiredConditions));
+		var conds = new CharParser[optionalConditions.length + 1][];
+		var requiredCondsList = (requiredConditions instanceof Collection<?> ? (Collection<S>)requiredConditions : ListBuilder.mutable((Iterable<S>)requiredConditions)); 
+		conds[0] = requiredCondsList.toArray(new CharParser[requiredCondsList.size()]);
 
-		for(Iterable<S> condSet : (Iterable<S>[])optionalConditions) {
-			conditionSets.add(ListBuilder.mutable(condSet));
+		int i = 1;
+		for(Iterable<? extends S> condSet : optionalConditions) {
+			var condList = (condSet instanceof Collection<?> ? (Collection<?>)condSet : ListBuilder.mutable(condSet));
+			conds[i] = condList.toArray(new CharParser[condList.size()]);
+			i++;
 		}
 
-		return new OptionalSuffixesAny<S>(name, conditionSets);
+		return new OptionalSuffixesAny<S>(name, false, conds);
 	}
 
 
@@ -93,7 +109,7 @@ public class CharConditionPipe {
 	 */
 	public static abstract class BasePipe<T extends ParserCondition> implements CharParser {
 		final boolean canReuse;
-		final List<List<T>> conditionSets; // FIFO list of conditions in this pipe
+		final ParserCondition[][] conditionSets; // FIFO list of conditions in this pipe
 		int curSetIndex;
 		int curCondIndex;
 		T curCondition; // the current condition
@@ -112,40 +128,47 @@ public class CharConditionPipe {
 		}
 
 
-		@SafeVarargs
-		public BasePipe(String name, T... filters) {
-			List<T> condSet0 = new ArrayList<>();
-			this.conditionSets = new ArrayList<>();
-			this.conditionSets.add(condSet0);
+		@SuppressWarnings("unchecked")
+		public BasePipe(String name, boolean copy, T firstFilter, ParserCondition[] subsequentFilters) {
+			ParserCondition[] condSet0 = new ParserCondition[subsequentFilters.length + 1];
+			condSet0[0] = firstFilter;
+			System.arraycopy(subsequentFilters, 0, condSet0, 1, subsequentFilters.length);
+			copyConditionsInPlace(copy, condSet0);
+			firstFilter = (T)condSet0[0]; // read back from array after copy
 
-			Collections.addAll(condSet0, filters);
-			this.curCondition = condSet0.get(0);
+			this.conditionSets = new ParserCondition[][] { condSet0 };
+			this.curCondition = firstFilter;
 			this.canReuse = ParserCondition.canRecycleAll(condSet0);
 			this.name = name;
 		}
 
 
-		public BasePipe(String name, Collection<T> filters) {
-			List<T> condSet0 = new ArrayList<>();
-			this.conditionSets = new ArrayList<>();
-			this.conditionSets.add(condSet0);
+		@SuppressWarnings("unchecked")
+		public BasePipe(String name, boolean copy, Collection<T> filters) {
+			ParserCondition[] condSet0 = copyConditionsInPlace(copy, filters.toArray(new ParserCondition[0]));
 
-			condSet0.addAll(filters);
-			this.curCondition = condSet0.get(0);
+			this.conditionSets = new ParserCondition[][] { condSet0 };
+			this.curCondition = (T)condSet0[0];
 			this.canReuse = ParserCondition.canRecycleAll(condSet0);
 			this.name = name;
 		}
 
 
-		public BasePipe(String name, List<? extends List<T>> filterSets) {
-			@SuppressWarnings("unchecked")
-			List<List<T>> filterSetsCast = (List<List<T>>)filterSets;
-			this.conditionSets = filterSetsCast;
-			this.curCondition = this.conditionSets.size() > 0 ? this.conditionSets.get(0).get(0) : null;
+		protected BasePipe(String name, boolean copy, ParserCondition[][] filterSets) {
+			int filterSetsCnt = filterSets.length;
+			var condCopies = new ParserCondition[filterSetsCnt][];
 			boolean reusable = true;
-			for(List<T> filterSet : filterSets) {
-				reusable &= ParserCondition.canRecycleAll(filterSet);
+			for(int i = 0; i < filterSetsCnt; i++) {
+				var filters = filterSets[i];
+				var filtersCopy = copyConditionsInPlace(copy, Arrays.copyOf(filters, filters.length));
+				condCopies[i] = filtersCopy;
+				reusable &= ParserCondition.canRecycleAll(filtersCopy);
 			}
+			@SuppressWarnings("unchecked")
+			var curCond = filterSetsCnt > 0 ? (T)condCopies[0][0] : null;
+
+			this.conditionSets = condCopies;
+			this.curCondition = curCond;
 			this.canReuse = reusable;
 			this.name = name;
 		}
@@ -200,15 +223,17 @@ public class CharConditionPipe {
 			anyComplete = false;
 			failed = false;
 			dstBuf.setLength(0);
-			for(int i = 0, size = conditionSets.size(); i < size; i++) {
-				List<T> condSet = conditionSets.get(i);
-				for(int ii = 0, sizeI = condSet.size(); ii < sizeI; ii++) {
+			for(int i = 0, size = conditionSets.length; i < size; i++) {
+				var condSet = conditionSets[i];
+				for(int ii = 0, sizeI = condSet.length; ii < sizeI; ii++) {
 					@SuppressWarnings("unchecked")
-					T condCopy = (T)condSet.get(ii).copyOrReuse();
-					condSet.set(ii, condCopy);
+					T condCopy = (T)condSet[ii].copyOrReuse();
+					condSet[ii] = condCopy;
 				}
 			}
-			curCondition = conditionSets.size() > 0 && conditionSets.get(0).size() > 0 ? conditionSets.get(0).get(0) : null;
+			@SuppressWarnings("unchecked")
+			var curCond = conditionSets.length > 0 && conditionSets[0].length > 0 ? (T)conditionSets[0][0] : null;
+			curCondition = curCond;
 		}
 
 
@@ -218,42 +243,40 @@ public class CharConditionPipe {
 		}
 
 
-		public static <S extends ParserCondition> List<List<S>> copyConditionSets(BasePipe<S> src) {
-			List<List<S>> condCopies = new ArrayList<>(src.conditionSets.size());
-			for(int i = 0, size = src.conditionSets.size(); i < size; i++) {
-				List<S> condSet = src.conditionSets.get(i);
-				List<S> condCopy = new ArrayList<>(condSet.size());
-				condCopies.add(condCopy);
-				for(int ii = 0, sizeI = condSet.size(); ii < sizeI; ii++) {
-					@SuppressWarnings("unchecked")
-					S copy = (S)condSet.get(ii).copy();
-					condCopy.add(copy);
-				}
+		public static ParserCondition[] copyConditionsInPlace(boolean copy, ParserCondition[] conds) {
+			if(!copy) {
+				return conds;
 			}
 
-			return condCopies;
+			for(int i = 0, size = conds.length; i < size; i++) {
+				var condCopy = conds[i].copy();
+				conds[i] = condCopy;
+			}
+
+			return conds;
 		}
 
 
-		public static <S extends ParserCondition> BasePipe<S> copyTo(BasePipe<S> src, BasePipe<S> dst) {
+		protected static <S extends ParserCondition> BasePipe<S> copyTo(BasePipe<S> src, BasePipe<S> dst) {
 			dst.subseqentConditionSetsOptional = src.subseqentConditionSetsOptional;
 			return dst;
 		}
 
 
-		public static String conditionSetToString(List<? extends List<?>> lists, String joiner, String prefixFirst, char prefixDelimiter, char suffixDelimiter) {
+		public static String conditionSetToString(Object[][] lists, String joiner, String prefixFirst, char prefixDelimiter, char suffixDelimiter) {
 			StringBuilder sb = new StringBuilder();
 			sb.append(prefixFirst);
-			int maxI = lists.size() - 1;
+			int maxI = lists.length - 1;
 			for(int i = 0; i < maxI; i++) {
+				var list = lists[i];
 				sb.append(prefixDelimiter);
-				sb.append(StringJoin.join(lists.get(i), joiner));
+				StringJoin.join(list, 0, list.length, joiner, sb);
 				sb.append(suffixDelimiter);
 				sb.append(joiner);
 			}
 			if(maxI > -1) {
 				sb.append(prefixDelimiter);
-				sb.append(StringJoin.join(lists.get(maxI), joiner));
+				StringJoin.join(lists[maxI], 0, lists[maxI].length, joiner, sb);
 				sb.append(suffixDelimiter);
 			}
 			return sb.toString();
@@ -275,40 +298,30 @@ public class CharConditionPipe {
 
 
 		@SuppressWarnings("unchecked")
-		public BasePipeMatchable(String name, CharParserMatchable firstFilter, T filter) {
-			super(name, (T)firstFilter);
-			List<T> condSet = super.conditionSets.get(0);
-			condSet.add(filter);
-
+		public BasePipeMatchable(String name, boolean copy, CharParserMatchable firstFilter, T filter) {
+			super(name, copy, (T)firstFilter, new CharParser[] { filter });
 			initFirstChars(firstFilter);
 		}
 
 
 		@SuppressWarnings("unchecked")
 		@SafeVarargs
-		public BasePipeMatchable(String name, CharParserMatchable firstFilter, T... filters) {
-			super(name, (T)firstFilter);
-			List<T> condSet = super.conditionSets.get(0);
-			Collections.addAll(condSet, filters);
-
+		public BasePipeMatchable(String name, boolean copy, CharParserMatchable firstFilter, T... filters) {
+			super(name, copy, (T)firstFilter, filters);
 			initFirstChars(firstFilter);
 		}
 
 
 		@SuppressWarnings("unchecked")
-		public BasePipeMatchable(String name, CharParserMatchable firstFilter, Collection<T> filters) {
-			super(name, (T)firstFilter);
-			List<T> condSet = super.conditionSets.get(0);
-			condSet.addAll(filters);
-
+		public BasePipeMatchable(String name, boolean copy, CharParserMatchable firstFilter, Collection<T> filters) {
+			super(name, copy, (T)firstFilter, filters.toArray(new CharParser[0]));
 			initFirstChars(firstFilter);
 		}
 
 
-		@SuppressWarnings("unchecked")
-		public BasePipeMatchable(String name, List<? extends List<? extends T>> filterSets) {
-			super(name, (List<List<T>>)filterSets);
-			initFirstChars((CharParserMatchable)super.conditionSets.get(0).get(0));
+		protected BasePipeMatchable(String name, boolean copy, ParserCondition[][] filterSets) {
+			super(name, copy, filterSets);
+			initFirstChars((CharParserMatchable)super.conditionSets[0][0]);
 		}
 
 
@@ -343,18 +356,18 @@ public class CharConditionPipe {
 	public static class AllRequired<S extends CharParser> extends BasePipeMatchable<S> {
 
 		@SafeVarargs
-		public AllRequired(String name, CharParserMatchable filter, S... filters) {
-			super(name, filter, filters);
+		public AllRequired(String name, boolean copy, CharParserMatchable filter, S... filters) {
+			super(name, copy, filter, filters);
 		}
 
 
-		public AllRequired(String name, CharParserMatchable filter, Collection<S> filters) {
-			super(name, filter, filters);
+		public AllRequired(String name, boolean copy, CharParserMatchable filter, Collection<S> filters) {
+			super(name, copy, filter, filters);
 		}
 
 
-		public AllRequired(String name, List<? extends List<S>> filterSets) {
-			super(name, filterSets);
+		protected AllRequired(String name, boolean copy, ParserCondition[][] filterSets) {
+			super(name, copy, filterSets);
 		}
 
 
@@ -373,13 +386,17 @@ public class CharConditionPipe {
 
 				// get the next condition
 				this.curCondIndex++;
-				if(this.curCondIndex < this.conditionSets.get(this.curSetIndex).size()) {
-					this.curCondition = this.conditionSets.get(this.curSetIndex).get(this.curCondIndex);
+				if(this.curCondIndex < this.conditionSets[this.curSetIndex].length) {
+					@SuppressWarnings("unchecked")
+					var curCond = (S)this.conditionSets[this.curSetIndex][this.curCondIndex];
+					this.curCondition = curCond;
 				}
-				else if(this.curSetIndex < this.conditionSets.size() - 1) {
+				else if(this.curSetIndex < this.conditionSets.length - 1) {
 					this.curSetIndex++;
 					this.curCondIndex = 0;
-					this.curCondition = this.conditionSets.get(this.curSetIndex).get(this.curCondIndex);
+					@SuppressWarnings("unchecked")
+					var curCond = (S)this.conditionSets[this.curSetIndex][this.curCondIndex];
+					this.curCondition = curCond;
 				}
 				// or there are no conditions left (this precondition filter is complete)
 				else {
@@ -401,7 +418,7 @@ public class CharConditionPipe {
 
 		@Override
 		public CharParser copy() {
-			AllRequired<S> copy = new AllRequired<>(name, BasePipe.copyConditionSets(this));
+			var copy = new AllRequired<S>(name, true, this.conditionSets);
 			BasePipe.copyTo(this, copy);
 			return copy;
 		}
@@ -417,14 +434,14 @@ public class CharConditionPipe {
 		private boolean ignoreFirstConditionCoords;
 
 
-		public AllRequiredPlain(String name, boolean ignoreFirstConditionCoords, Collection<S> filters) {
-			super(name, filters);
+		public AllRequiredPlain(String name, boolean copy, boolean ignoreFirstConditionCoords, Collection<S> filters) {
+			super(name, copy, filters);
 			this.ignoreFirstConditionCoords = ignoreFirstConditionCoords;
 		}
 
 
-		public AllRequiredPlain(String name, boolean ignoreFirstConditionCoords, List<? extends List<S>> filterSets) {
-			super(name, filterSets);
+		protected AllRequiredPlain(String name, boolean copy, boolean ignoreFirstConditionCoords, ParserCondition[][] filterSets) {
+			super(name, copy, filterSets);
 			this.ignoreFirstConditionCoords = ignoreFirstConditionCoords;
 		}
 
@@ -452,13 +469,17 @@ public class CharConditionPipe {
 
 				// get the next condition
 				this.curCondIndex++;
-				if(this.curCondIndex < this.conditionSets.get(this.curSetIndex).size()) {
-					this.curCondition = this.conditionSets.get(this.curSetIndex).get(this.curCondIndex);
+				if(this.curCondIndex < this.conditionSets[this.curSetIndex].length) {
+					@SuppressWarnings("unchecked")
+					var curCond = (S)this.conditionSets[this.curSetIndex][this.curCondIndex];
+					this.curCondition = curCond;
 				}
-				else if(this.curSetIndex < this.conditionSets.size() - 1) {
+				else if(this.curSetIndex < this.conditionSets.length - 1) {
 					this.curSetIndex++;
 					this.curCondIndex = 0;
-					this.curCondition = this.conditionSets.get(this.curSetIndex).get(this.curCondIndex);
+					@SuppressWarnings("unchecked")
+					var curCond = (S)this.conditionSets[this.curSetIndex][this.curCondIndex];
+					this.curCondition = curCond;
 				}
 				// or there are no conditions left (this precondition filter is complete)
 				else {
@@ -487,7 +508,7 @@ public class CharConditionPipe {
 
 		@Override
 		public CharParser copy() {
-			AllRequiredPlain<S> copy = new AllRequiredPlain<>(name, this.ignoreFirstConditionCoords, BasePipe.copyConditionSets(this));
+			var copy = new AllRequiredPlain<S>(name, true, this.ignoreFirstConditionCoords, this.conditionSets);
 			BasePipe.copyTo(this, copy);
 			return copy;
 		}
@@ -502,13 +523,13 @@ public class CharConditionPipe {
 	 */
 	public static abstract class AcceptMultiple<S extends CharParser> extends BasePipeMatchable<S> {
 
-		public AcceptMultiple(String name, CharParserMatchable filter, Collection<S> filters) {
-			super(name, filter, filters);
+		public AcceptMultiple(String name, boolean copy, CharParserMatchable filter, Collection<S> filters) {
+			super(name, copy, filter, filters);
 		}
 
 
-		public AcceptMultiple(String name, List<? extends List<? extends S>> filterSets) {
-			super(name, filterSets);
+		protected AcceptMultiple(String name, boolean copy, ParserCondition[][] filterSets) {
+			super(name, copy, filterSets);
 		}
 
 
@@ -579,43 +600,42 @@ public class CharConditionPipe {
 
 	public static class OptionalSuffix<S extends CharParser> extends AcceptMultiple<S> {
 
-		public OptionalSuffix(String name, CharParserMatchable filter, Collection<S> filters) {
-			super(name, filter, filters);
-			setup();
+		public OptionalSuffix(String name, boolean copy, CharParserMatchable filter, Collection<S> filters) {
+			super(name, copy, filter, filters);
+			super.subseqentConditionSetsOptional = true;
 		}
 
 
-		public OptionalSuffix(String name, List<? extends List<S>> filterSets) {
-			super(name, filterSets);
-			setup();
-		}
-
-
-		private final void setup() {
+		protected OptionalSuffix(String name, boolean copy, ParserCondition[][] filterSets) {
+			super(name, copy, filterSets);
 			super.subseqentConditionSetsOptional = true;
 		}
 
 
 		@Override
 		public S nextCondition() {
-			List<S> curCondSet = super.conditionSets.get(super.curSetIndex);
+			var curCondSet = super.conditionSets[super.curSetIndex];
 			@SuppressWarnings("unchecked")
 			S condCopy = (S)super.curCondition.copyOrReuse();
-			curCondSet.set(super.curCondIndex, condCopy);
+			curCondSet[super.curCondIndex] = condCopy;
 
 			super.curCondIndex++;
 
 			// advance to the next condition in the current set
-			if(super.curCondIndex < curCondSet.size()) {
-				return curCondSet.get(super.curCondIndex);
+			if(super.curCondIndex < curCondSet.length) {
+				@SuppressWarnings("unchecked")
+				var retCond = (S)curCondSet[super.curCondIndex];
+				return retCond;
 			}
 			// advance to the next set of conditions
-			else if(super.curSetIndex < super.conditionSets.size() - 1) {
+			else if(super.curSetIndex < super.conditionSets.length - 1) {
 				super.anyComplete = true;
 				super.curSetIndex++;
 				super.curCondIndex = 0;
-				curCondSet = super.conditionSets.get(super.curSetIndex);
-				return curCondSet.size() > 0 ? curCondSet.get(super.curCondIndex) : null;
+				curCondSet = super.conditionSets[super.curSetIndex];
+				@SuppressWarnings("unchecked")
+				var retCond = curCondSet.length > 0 ? (S)curCondSet[super.curCondIndex] : null;
+				return retCond;
 			}
 			// or there are no conditions left (this precondition filter is complete)
 			else {
@@ -627,7 +647,7 @@ public class CharConditionPipe {
 
 		@Override
 		public CharParser copy() {
-			OptionalSuffix<S> copy = new OptionalSuffix<>(name, BasePipe.copyConditionSets(this));
+			var copy = new OptionalSuffix<S>(name, true, this.conditionSets);
 			BasePipe.copyTo(this, copy);
 			return copy;
 		}
@@ -653,19 +673,14 @@ public class CharConditionPipe {
 		private char prevCallLookAheadChar;
 
 
-		public OptionalSuffixesAny(String name, CharParserMatchable filter, Collection<S> filters) {
-			super(name, filter, filters);
-			setup();
+		public OptionalSuffixesAny(String name, boolean copy, CharParserMatchable filter, Collection<S> filters) {
+			super(name, copy, filter, filters);
+			super.subseqentConditionSetsOptional = true;
 		}
 
 
-		public OptionalSuffixesAny(String name, List<? extends List<? extends S>> filterSets) {
-			super(name, filterSets);
-			setup();
-		}
-
-
-		private final void setup() {
+		protected OptionalSuffixesAny(String name, boolean copy, ParserCondition[][] filterSets) {
+			super(name, copy, filterSets);
 			super.subseqentConditionSetsOptional = true;
 		}
 
@@ -758,24 +773,28 @@ public class CharConditionPipe {
 
 
 		public S nextCondition() {
-			List<S> curCondSet = super.conditionSets.get(super.curSetIndex);
+			var curCondSet = super.conditionSets[super.curSetIndex];
 			@SuppressWarnings("unchecked")
 			S condCopy = (S)super.curCondition.copyOrReuse();
-			curCondSet.set(super.curCondIndex, condCopy);
+			curCondSet[super.curCondIndex] = condCopy;
 
 			super.curCondIndex++;
 
 			// advance to the next condition in the current set
-			if(super.curCondIndex < curCondSet.size()) {
-				return curCondSet.get(super.curCondIndex);
+			if(super.curCondIndex < curCondSet.length) {
+				@SuppressWarnings("unchecked")
+				var retCond = (S)curCondSet[super.curCondIndex];
+				return retCond;
 			}
 			// advance to the next set of conditions
-			else if(super.curSetIndex < super.conditionSets.size() - 1) {
+			else if(super.curSetIndex < super.conditionSets.length - 1) {
 				super.anyComplete = true;
 				super.curSetIndex++;
 				super.curCondIndex = 0;
-				curCondSet = super.conditionSets.get(super.curSetIndex);
-				return curCondSet.size() > 0 ? curCondSet.get(super.curCondIndex) : null;
+				curCondSet = super.conditionSets[super.curSetIndex];
+				@SuppressWarnings("unchecked")
+				var retCond = curCondSet.length > 0 ? (S)curCondSet[super.curCondIndex] : null;
+				return retCond;
 			}
 			// or there are no conditions left (this precondition filter is complete)
 			else {
@@ -787,7 +806,7 @@ public class CharConditionPipe {
 
 		@Override
 		public CharParser copy() {
-			OptionalSuffixesAny<S> copy = new OptionalSuffixesAny<>(name, BasePipe.copyConditionSets(this));
+			var copy = new OptionalSuffixesAny<S>(name, true, this.conditionSets);
 			BasePipe.copyTo(this, copy);
 			return copy;
 		}
@@ -810,20 +829,20 @@ public class CharConditionPipe {
 	 */
 	public static class RepeatableSeparator<S extends CharParser> extends AcceptMultiple<S> {
 
-		public RepeatableSeparator(String name, CharParserMatchable filter, Collection<S> filters) {
-			super(name, filter, filters);
+		public RepeatableSeparator(String name, boolean copy, CharParserMatchable filter, Collection<S> filters) {
+			super(name, copy, filter, filters);
 			setup();
 		}
 
 
-		public RepeatableSeparator(String name, List<? extends List<? extends S>> filterSets) {
-			super(name, filterSets);
+		protected RepeatableSeparator(String name, boolean copy, ParserCondition[][] filterSets) {
+			super(name, copy, filterSets);
 			setup();
 		}
 
 
 		private final void setup() {
-			if(super.conditionSets.size() > 2) {
+			if(super.conditionSets.length > 2) {
 				// technically this allows for 1 element repeating parsers
 				throw new IllegalStateException("a repeatable separator pipe condition can only contain 2 condition sets, the element parser and the separator parser");
 			}
@@ -833,22 +852,24 @@ public class CharConditionPipe {
 
 		@Override
 		public S nextCondition() {
-			List<S> curCondSet = super.conditionSets.get(super.curSetIndex);
+			var curCondSet = super.conditionSets[super.curSetIndex];
 			@SuppressWarnings("unchecked")
 			S condCopy = (S)super.curCondition.copyOrReuse();
-			curCondSet.set(super.curCondIndex, condCopy);
+			curCondSet[super.curCondIndex] = condCopy;
 
 			super.curCondIndex++;
 
-			if(super.curCondIndex < curCondSet.size()) {
-				return curCondSet.get(super.curCondIndex);
+			if(super.curCondIndex < curCondSet.length) {
+				@SuppressWarnings("unchecked")
+				var retCond = (S)curCondSet[super.curCondIndex];
+				return retCond;
 			}
 			// advance to the separator parser or back to the element parser
 			else {
 				// advance to the separator parser
 				if(super.curSetIndex == 0) {
 					super.anyComplete = true; // the element parser just completed, so it's a valid parser stop point
-					super.curSetIndex = (super.curSetIndex + 1) % super.conditionSets.size(); // allows for 1 condition
+					super.curSetIndex = (super.curSetIndex + 1) % super.conditionSets.length; // allows for 1 condition
 				}
 				// cycle back to the element parser set
 				else if(super.curSetIndex > 0) {
@@ -859,20 +880,22 @@ public class CharConditionPipe {
 				}
 
 				super.curCondIndex = 0;
-				curCondSet = super.conditionSets.get(super.curSetIndex);
-				for(int i = 0, size = curCondSet.size(); i < size; i++) {
+				curCondSet = super.conditionSets[super.curSetIndex];
+				for(int i = 0, size = curCondSet.length; i < size; i++) {
 					@SuppressWarnings("unchecked")
-					S curCond = (S)curCondSet.get(i).copyOrReuse();
-					curCondSet.set(i, curCond);
+					S curCond = (S)curCondSet[i].copyOrReuse();
+					curCondSet[i] = curCond;
 				}
-				return curCondSet.size() > 0 ? curCondSet.get(super.curCondIndex) : null;
+				@SuppressWarnings("unchecked")
+				var retCond = curCondSet.length > 0 ? (S)curCondSet[super.curCondIndex] : null;
+				return retCond;
 			}
 		}
 
 
 		@Override
 		public CharParser copy() {
-			RepeatableSeparator<S> copy = new RepeatableSeparator<>(name, BasePipe.copyConditionSets(this));
+			var copy = new RepeatableSeparator<S>(name, true, this.conditionSets);
 			BasePipe.copyTo(this, copy);
 			return copy;
 		}

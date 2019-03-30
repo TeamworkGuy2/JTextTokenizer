@@ -3,8 +3,8 @@ package twg2.text.tokenizer;
 import java.util.Arrays;
 import java.util.Collection;
 
+import twg2.arrays.ArrayManager;
 import twg2.arrays.ArrayUtil;
-import twg2.collections.dataStructures.Bag;
 import twg2.parser.Inclusion;
 import twg2.parser.condition.text.CharParser;
 import twg2.parser.condition.text.CharParserMatchable;
@@ -31,7 +31,8 @@ public class StringConditions {
 	public static abstract class BaseStringParser implements CharParserMatchable {
 		String[] originalStrs;
 		char[] firstChars;
-		Bag<String> matchingStrs;
+		String[] matchingStrs;
+		int matchingStrsSize;
 		boolean anyComplete = false;
 		boolean failed = false;
 		/** count all accepted characters (including characters not explicitly part of 'matchingChars') */
@@ -51,18 +52,35 @@ public class StringConditions {
 
 		// package-private
 		BaseStringParser(String name, String[] strs, Inclusion includeCondMatchInRes) {
+			int strCnt = strs.length;
 			this.originalStrs = strs;
-			this.firstChars = new char[strs.length];
-			for(int i = 0, size = strs.length; i < size; i++) {
-				this.firstChars[i] = strs[i].charAt(0);
+			var firstChars = new char[strCnt];
+			for(int i = 0; i < strCnt; i++) {
+				firstChars[i] = strs[i].charAt(0);
 			}
-			this.matchingStrs = new Bag<String>(this.originalStrs, 0, this.originalStrs.length);
-			this.anyComplete = false;
+			this.firstChars = firstChars;
+
+			this.matchingStrs = new String[strCnt];
+	        System.arraycopy(strs, 0, this.matchingStrs, 0, strCnt);
+	        this.matchingStrsSize = strCnt;
+
+	        this.anyComplete = false;
 			this.includeMatchInRes = includeCondMatchInRes;
 			this.name = name;
-			this.firstCharMatcher = (char ch, TextParser buf) -> {
-				return ArrayUtil.indexOf(firstChars, ch) > -1;
-			};
+			// performance optimization for single char matchers
+			if(firstChars.length == 1) {
+				this.firstCharMatcher = (char ch, TextParser buf) -> {
+					return firstChars[0] == ch;
+				};
+			}
+			else {
+				this.firstCharMatcher = (char ch, TextParser buf) -> {
+					for(int i = 0, size = firstChars.length; i < size; i++) {
+						if(firstChars[i] == ch) { return true; }
+					}
+					return false;
+				};
+			}
 		}
 
 
@@ -129,7 +147,9 @@ public class StringConditions {
 
 		// package-private
 		void reset() {
-			matchingStrs.clearAndAddAll(originalStrs);
+			var origCnt = originalStrs.length;
+			ArrayManager.clearAndAddAll(matchingStrs, originalStrs, 0, origCnt);
+			matchingStrsSize = origCnt;
 			anyComplete = false;
 			failed = false;
 			dstBuf.setLength(0);
@@ -142,16 +162,19 @@ public class StringConditions {
 		 * @return 0 if no match, 1 if match found, 2 if match completed
 		 */
 		// package-private
-		static byte updateMatches(char ch, int off, Bag<String> matches) {
+		private byte updateMatches(char ch, int off) {
+			var matches = this.matchingStrs;
+			int size = this.matchingStrsSize;
 			byte found = 0;
 			// reverse iterate through the bag so we don't have to adjust the loop counter when we remove elements
-			for(int i = matches.size() - 1; i > -1; i--) {
-				String str = matches.get(i);
+			for(int i = size - 1; i > -1; i--) {
+				String str = matches[i];
 				int strLen = str.length();
 				// ignore string shorter than the current search offset (technically, if the precondition filter starts at offset 0, none of these should exist)
 				if(strLen > off) {
 					if(str.charAt(off) != ch) {
-						matches.remove(i);
+						ArrayManager.removeUnordered(matches, size, i);
+						size--;
 					}
 					else {
 						found = 1;
@@ -161,9 +184,11 @@ public class StringConditions {
 					}
 				}
 				else {
-					matches.remove(i);
+					ArrayManager.removeUnordered(matches, size, i);
+					size--;
 				}
 			}
+			this.matchingStrsSize = size;
 			return found;
 		}
 
@@ -210,17 +235,18 @@ public class StringConditions {
 		@Override
 		public boolean acceptNext(char ch, TextParser buf) {
 			int off = super.dstBuf.length();
-			if(super.acceptedCount > off) {
+			int acceptedCnt = super.acceptedCount;
+			if(acceptedCnt > off) {
 				super.failed = true;
 				return false;
 			}
-			byte found = updateMatches(ch, off, super.matchingStrs);
+			byte found = super.updateMatches(ch, off);
 			if(found == 2) {
 				super.anyComplete = true;
 			}
 
 			if(found > 0) {
-				if(super.acceptedCount == 0) {
+				if(acceptedCnt == 0) {
 					super.coords.setStart(buf);
 				}
 				super.acceptedCount++;
@@ -271,7 +297,7 @@ public class StringConditions {
 				}
 			}
 
-			byte found = updateMatches(ch, off, super.matchingStrs);
+			byte found = super.updateMatches(ch, off);
 			if(found == 2) {
 				super.anyComplete = true;
 			}
@@ -307,25 +333,26 @@ public class StringConditions {
 		 * @return true if a shorter match exists
 		 */
 		private boolean findMoreRecentMatch(char ch, TextParser buf) {
+			var dstBuf = super.dstBuf;
 			// start i = 1 because this method should only get called when current sequence is a match and another characters is available
 			// OR (i == 1 && size == 1) supports the case when 1 character has been matched and the next 'ch' doesn't match, but 'ch' might match with the beginning of this condition
-			for(int i = 1, size = super.dstBuf.length(); i < size || (i == 1 && size == 1); i++) {
+			for(int i = 1, size = dstBuf.length(); i < size || (i == 1 && size == 1); i++) {
 				this.partialReset();
 				for(int j = i; j < size; j++) {
-					byte found = updateMatches(super.dstBuf.charAt(j), j - i, super.matchingStrs);
+					byte found = super.updateMatches(dstBuf.charAt(j), j - i);
 					if(found == 2) {
 						super.anyComplete = true;
 					}
 				}
 				// newest char
-				byte found = updateMatches(ch, size - i, super.matchingStrs);
+				byte found = super.updateMatches(ch, size - i);
 				if(found == 2) {
 					super.anyComplete = true;
 				}
 				// found match
-				if(super.matchingStrs.size() > 0) {
-					super.dstBuf.delete(0, i);
-					super.dstBuf.append(ch);
+				if(super.matchingStrsSize > 0) {
+					dstBuf.delete(0, i);
+					dstBuf.append(ch);
 					super.acceptedCount = size - i + 1;
 					int pos = super.coords.getOffsetStart() + i;
 					int lineNum = buf.getLineNumbers().getLineNumber(pos);
@@ -343,7 +370,9 @@ public class StringConditions {
 
 		// package-private
 		void partialReset() {
-			matchingStrs.clearAndAddAll(originalStrs);
+			var origCnt = originalStrs.length;
+			ArrayManager.clearAndAddAll(matchingStrs, originalStrs, 0, origCnt);
+			matchingStrsSize = origCnt;
 			anyComplete = false;
 			failed = false;
 			//dstBuf.setLength(0);

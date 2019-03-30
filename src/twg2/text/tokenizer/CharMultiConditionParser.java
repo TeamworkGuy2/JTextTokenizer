@@ -1,9 +1,9 @@
 package twg2.text.tokenizer;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map.Entry;
 
-import twg2.collections.dataStructures.PairList;
 import twg2.parser.condition.text.CharParser;
 import twg2.parser.textFragment.TextConsumer;
 import twg2.parser.textFragment.TextFragmentRef;
@@ -42,32 +42,48 @@ public class CharMultiConditionParser {
 
 
 
-	private PairList<CharParserFactory, TextConsumer> conditions;
-	private PairList<CharParserFactory, MatcherState> curCompoundMatchers;
+	private CharParserFactory[] conditionParserFactories;
+	private TextConsumer[] conditionConsumers;
+	private ArrayList<MatcherState> curCompoundMatchers;
 	private TypedLogger<ParserAction, ?> parseLog;
 
 
 	/**
 	 * @param parseLog optional performance tracker, can be null
 	 */
-	public CharMultiConditionParser(TypedLogger<ParserAction, ?> parseLog) {
-		this.conditions = new PairList<>();
-		this.curCompoundMatchers = new PairList<>();
-		this.parseLog = parseLog;
-	}
-
-
 	@SafeVarargs
 	public CharMultiConditionParser(TypedLogger<ParserAction, ?> parseLog, Entry<CharParserFactory, TextConsumer>... conditions) {
-		this.conditions = new PairList<>(conditions);
-		this.curCompoundMatchers = new PairList<>();
+		var cpfs = new CharParserFactory[conditions.length];
+		var ccs = new TextConsumer[conditions.length];
+		int compoundCnt = 0;
+		for(int i = 0, size = conditions.length; i < size; i++) {
+			var cond = conditions[i];
+			cpfs[i] = cond.getKey();
+			ccs[i] = cond.getValue();
+			compoundCnt += (cond.getKey().isCompound() ? 1 : 0);
+		}
+		this.conditionParserFactories = cpfs;
+		this.conditionConsumers = ccs;
+		this.curCompoundMatchers = new ArrayList<>(compoundCnt < 10 ? compoundCnt : 10);
 		this.parseLog = parseLog;
 	}
 
 
 	public CharMultiConditionParser(TypedLogger<ParserAction, ?> parseLog, Collection<? extends Entry<CharParserFactory, TextConsumer>> conditions) {
-		this.conditions = new PairList<>(conditions);
-		this.curCompoundMatchers = new PairList<>();
+		var condCount = conditions.size();
+		var cpfs = new CharParserFactory[condCount];
+		var ccs = new TextConsumer[condCount];
+		int compoundCnt = 0;
+		int i = 0;
+		for(var cond : conditions) {
+			cpfs[i] = cond.getKey();
+			ccs[i] = cond.getValue();
+			compoundCnt += (cond.getKey().isCompound() ? 1 : 0);
+			i++;
+		}
+		this.conditionParserFactories = cpfs;
+		this.conditionConsumers = ccs;
+		this.curCompoundMatchers = new ArrayList<>(compoundCnt < 10 ? compoundCnt : 10);
 		this.parseLog = parseLog;
 	}
 
@@ -81,17 +97,19 @@ public class CharMultiConditionParser {
 		int addedCondCount = 0;
 		int charsRead = 0;
 		TextFragmentRef completedToken = null;
+		var conds = this.conditionParserFactories;
+		var consumers = this.conditionConsumers;
 
 		// add parsers that match
 		outer:
-		for(int i = 0, size = conditions.size(); i < size; i++) {
-			CharParserFactory cond = conditions.getKey(i);
+		for(int i = 0, size = conds.length; i < size; i++) {
+			CharParserFactory cond = conds[i];
 
 			// when possible parse encountered (based on one char), try continuing parsing it
 			if(cond.isMatch(ch, buf)) {
 				if(cond.isCompound()) {
 					CharParser parserCond = cond.createParser();
-					curCompoundMatchers.add(cond, new MatcherState(buf.getPosition(), parserCond, conditions.getValue(i)));
+					this.curCompoundMatchers.add(new MatcherState(buf.getPosition(), parserCond, consumers[i]));
 					addedCondCount++;
 				}
 				else {
@@ -107,7 +125,7 @@ public class CharMultiConditionParser {
 						boolean failed = parser.isFailed();
 
 						if(complete) {
-							completedToken = consumeToken(parser, conditions.getValue(i));
+							completedToken = consumeToken(parser, consumers[i]);
 							break outer;
 						}
 						else if(failed) {
@@ -132,14 +150,14 @@ public class CharMultiConditionParser {
 	}
 
 
-	private static void passCompletedCharsToCompoundParsers(char ch, TextParser buf, TypedLogger<ParserAction, ?> parseLog, PairList<CharParserFactory, MatcherState> compoundMatchers) {
+	private static void passCompletedCharsToCompoundParsers(char ch, TextParser buf, TypedLogger<ParserAction, ?> parseLog, ArrayList<MatcherState> compoundMatchers) {
 		int acceptedFragCount = 0;
 		int acceptedCount = 0;
 
 		// for each in-progress compound parser, check if it accepts the next token, if not, remove it from the current set of matching parsers
 		// IMPORTANT: we loop backward so that more recently started parser can consume input first (this ensures that things like matching quote or parentheses are matched in order)
 		for(int i = compoundMatchers.size() - 1; i > -1; i--) {
-			MatcherState condEntry = compoundMatchers.getValue(i);
+			MatcherState condEntry = compoundMatchers.get(i);
 			CharParser cond = condEntry.parser;
 
 			cond.acceptNext(ch, buf);
@@ -153,7 +171,6 @@ public class CharMultiConditionParser {
 				// (a non-compound conditions that started parsing before this condition may or may not complete successfully)
 				if(complete) {
 					TextFragmentRef frag = consumeToken(cond, condEntry.consumer);
-
 					acceptedFragCount++;
 
 					// TODO if all remaining matchers on the curMatchers stack are compound, allow them to accept this char (which already completed a token),
@@ -162,7 +179,7 @@ public class CharMultiConditionParser {
 					// closing ")" parser never gets called and never sets the start position of its 'coords'
 					if(frag.getOffsetEnd() - frag.getOffsetStart() == 1) {
 						for(int k = i - 1; k > -1; k--) {
-							MatcherState condEntryTmp = compoundMatchers.getValue(k);
+							MatcherState condEntryTmp = compoundMatchers.get(k);
 							CharParser condTmp = condEntryTmp.parser;
 
 							condTmp.acceptNext(ch, buf);
@@ -178,11 +195,11 @@ public class CharMultiConditionParser {
 						}
 					}
 
-					compoundMatchers.removeIndex(i);
+					compoundMatchers.remove(i);
 					// IMPORTANT: this ensures that a character can only be used to complete 1 token
 					break;
 				}
-				compoundMatchers.removeIndex(i);
+				compoundMatchers.remove(i);
 			}
 		}
 

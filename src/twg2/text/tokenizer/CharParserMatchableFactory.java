@@ -1,7 +1,6 @@
 package twg2.text.tokenizer;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -21,8 +20,8 @@ import twg2.tuple.Tuples;
 public class CharParserMatchableFactory<P extends CharParser> implements CharParserFactory {
 	@SuppressWarnings("unused")
 	private String name;
-	private List<P> conditions;
-	private List<CharParserPredicate> firstCharConds;
+	private P[] conditions;
+	private CharParserPredicate[] firstCharConds;
 	private CharParser conditionSet;
 	private boolean compound;
 
@@ -37,25 +36,27 @@ public class CharParserMatchableFactory<P extends CharParser> implements CharPar
 	public CharParserMatchableFactory(String name, boolean compound, Entry<CharParserPredicate, P>... parserConditions) {
 		this.name = name;
 		this.compound = compound;
-		this.conditions = new ArrayList<>();
-		this.firstCharConds = new ArrayList<>(parserConditions.length);
 
 		// optimization for single condition sets
 		if(parserConditions.length == 1) {
-			this.conditions.add(parserConditions[0].getValue());
+			@SuppressWarnings("unchecked")
+			var conds = (P[])new CharParser[] { parserConditions[0].getValue() };
+			this.conditions = conds;
 			this.conditionSet = parserConditions[0].getValue();
-			this.firstCharConds.add(parserConditions[0].getKey());
+			this.firstCharConds = new CharParserPredicate[] { parserConditions[0].getKey() };
 		}
 		else {
 			@SuppressWarnings("unchecked")
 			P[] conds = (P[])new CharParser[parserConditions.length];
+			var charConds = new CharParserPredicate[parserConditions.length];
 			int i = 0;
 			for(Map.Entry<CharParserPredicate, P> entry : parserConditions) {
 				conds[i] = entry.getValue();
-				this.firstCharConds.add(entry.getKey());
-				this.conditions.add(entry.getValue());
+				charConds[i] = entry.getKey();
 				i++;
 			}
+			this.conditions = conds;
+			this.firstCharConds = charConds;
 			this.conditionSet = new CharCompoundConditions.StartFilter(name, false, conds);
 		}
 	}
@@ -67,16 +68,11 @@ public class CharParserMatchableFactory<P extends CharParser> implements CharPar
 	}
 
 
-	public void add(CharParserPredicate firstCharTest, P parserCondition) {
-		this.conditions.add(parserCondition);
-		this.firstCharConds.add(firstCharTest);
-	}
-
-
 	@Override
 	public boolean isMatch(char ch, TextParser buf) {
-		for(int i = 0, size = this.firstCharConds.size(); i < size; i++) {
-			if(this.firstCharConds.get(i).test(ch, buf)) {
+		var charConds = this.firstCharConds;
+		for(int i = 0, size = charConds.length; i < size; i++) {
+			if(charConds[i].test(ch, buf)) {
 				return true;
 			}
 		}
@@ -92,7 +88,7 @@ public class CharParserMatchableFactory<P extends CharParser> implements CharPar
 
 	@Override
 	public String toString() {
-		return (compound ? "compound " : "") + conditions;
+		return (compound ? "compound " : "") + Arrays.toString(conditions);
 	}
 
 }

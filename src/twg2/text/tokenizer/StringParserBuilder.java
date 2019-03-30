@@ -37,7 +37,7 @@ public class StringParserBuilder {
 
 
 	public StringParserBuilder addStringLiteralMarker(String name, String str) {
-		StringConditions.Literal cond = new StringConditions.Literal(name, new String[] { str }, Inclusion.INCLUDE);
+		var cond = new StringConditions.Literal(name, new String[] { str }, Inclusion.INCLUDE);
 		this.stringConds.add(cond);
 		this.stringStartFilters.add(cond.getFirstCharMatcher());
 		return this;
@@ -45,7 +45,7 @@ public class StringParserBuilder {
 
 
 	public StringParserBuilder addCharLiteralMarker(String name, char start) {
-		CharConditions.Literal cond = new CharConditions.Literal(name, CharArrayList.of(start), Inclusion.INCLUDE);
+		var cond = new CharConditions.Literal(name, CharArrayList.of(start), Inclusion.INCLUDE);
 		this.stringConds.add(cond);
 		this.stringStartFilters.add(cond.getFirstCharMatcher());
 		return this;
@@ -53,7 +53,7 @@ public class StringParserBuilder {
 
 
 	public StringParserBuilder addCharMatcher(String name, char[] chars) {
-		CharConditions.Contains cond = new CharConditions.Contains(name, CharArrayList.of(chars), Inclusion.INCLUDE);
+		var cond = new CharConditions.Contains(name, CharArrayList.of(chars), Inclusion.INCLUDE);
 		this.stringConds.add(cond);
 		this.stringStartFilters.add(cond.getFirstCharMatcher());
 		return this;

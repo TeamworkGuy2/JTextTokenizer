@@ -4,7 +4,16 @@ This project does its best to adhere to [Semantic Versioning](http://semver.org/
 
 
 --------
-### [0.2.3](N/A) - 2017-11-11
+### [0.3.0](N/A) - 2019-03-26
+Performance refactor, reduced average real world JParseCode run times by ~10%
+#### Changed
+* Extensive constructor parameter changes across multiple classes to allow for more efficient field types, copy() calls, and predicates for char tests
+* Switched from List, Bag, and PairList for many internal fields to raw arrays where possible. Found that many classes don't modify these fields outside the constructor; adjusted constructor code to calculate size and allocate arrays directly
+* `CharConditionPipe` sub-class constructors and copy() behavior optimized to prevent unnecessary copies and use arrays instead of ArrayLists
+
+
+--------
+### [0.2.3](https://github.com/TeamworkGuy2/JTextTokenizer/commit/793231f9412171b0c0f02c882c21476e5632148c) - 2017-11-11
 #### Fixed
 * Another fix for `StringConditions.End` corner case when one character has been matched and the next character isn't a match, but is a match if we restart matching
 

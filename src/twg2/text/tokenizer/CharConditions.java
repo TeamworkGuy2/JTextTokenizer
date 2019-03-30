@@ -2,7 +2,6 @@ package twg2.text.tokenizer;
 
 import java.util.Arrays;
 
-import twg2.arrays.ArrayUtil;
 import twg2.collections.primitiveCollections.CharList;
 import twg2.collections.primitiveCollections.CharListReadOnly;
 import twg2.functions.predicates.CharPredicate;
@@ -168,22 +167,29 @@ public class CharConditions {
 	 */
 	public static abstract class BaseCharParserMatchable extends BaseCharParser implements CharParserMatchable {
 		char[] firstMatchChars;
-		CharPredicate origMatcher;
 		CharParserPredicate firstCharMatcher;
 
 
-		public BaseCharParserMatchable(String name, CharList chars, Inclusion includeCondMatchInRes) {
-			this(name, chars::contains, null, chars.toArray(), includeCondMatchInRes, null);
-		}
-
-
-		public BaseCharParserMatchable(String name, CharPredicate charMatcher, CharPredicate firstCharMatcher, char[] firstMatchChars, Inclusion includeCondMatchInRes, Object toStringSrc) {
+		public BaseCharParserMatchable(String name, CharPredicate charMatcher, CharParserPredicate firstCharMatcher, char[] firstMatchChars, Inclusion includeCondMatchInRes, Object toStringSrc) {
 			super(name, charMatcher, includeCondMatchInRes, toStringSrc);
 			this.firstMatchChars = firstMatchChars;
-			this.firstCharMatcher = (char ch, TextParser buf) -> {
-				return ArrayUtil.indexOf(firstMatchChars, ch) > -1;
-			};
-			this.origMatcher = firstCharMatcher;
+			if(firstCharMatcher != null) {
+				this.firstCharMatcher = firstCharMatcher;
+			}
+			// performance optimization for single char matchers
+			else if(firstMatchChars.length == 1) {
+				this.firstCharMatcher = (char ch, TextParser buf) -> {
+					return firstMatchChars[0] == ch;
+				};
+			}
+			else {
+				this.firstCharMatcher = (char ch, TextParser buf) -> {
+					for(int i = 0, size = firstMatchChars.length; i < size; i++) {
+						if(firstMatchChars[i] == ch) { return true; }
+					}
+					return false;
+				};
+			}
 		}
 
 
@@ -221,13 +227,12 @@ public class CharConditions {
 	public static class Start extends BaseCharParserMatchable {
 
 		public Start(String name, CharList chars, Inclusion includeCondMatchInRes) {
-			super(name, chars, includeCondMatchInRes);
+			super(name, chars::contains, null, chars.toArray(), includeCondMatchInRes, null);
 		}
 
 
-		public Start(String name, CharPredicate charMatcher, CharPredicate firstCharMatcher,
-				char[] matchChars, Inclusion includeCondMatchInRes, Object toStringSrc) {
-			super(name, charMatcher, firstCharMatcher, matchChars, includeCondMatchInRes, toStringSrc);
+		public Start(String name, CharPredicate charMatcher, char[] firstMatchChars, Inclusion includeCondMatchInRes, Object toStringSrc) {
+			super(name, charMatcher, null, firstMatchChars, includeCondMatchInRes, toStringSrc);
 		}
 
 
@@ -238,9 +243,10 @@ public class CharConditions {
 				return false;
 			}
 
-			super.anyComplete = super.charMatcher.test(ch);
+			boolean match = super.charMatcher.test(ch);
+			super.anyComplete = match;
 
-			if(super.anyComplete) {
+			if(match) {
 				super.acceptedCompletedChar(ch, buf);
 				super.coords.setEnd(buf);
 				return true;
@@ -254,7 +260,7 @@ public class CharConditions {
 
 		@Override
 		public Start copy() {
-			return new Start(super.name, super.charMatcher, super.origMatcher, super.firstMatchChars, super.includeMatchInRes, super.toStringSrc);
+			return new Start(super.name, super.charMatcher, super.firstMatchChars, super.includeMatchInRes, super.toStringSrc);
 		}
 
 	}
@@ -271,15 +277,14 @@ public class CharConditions {
 		}
 
 
-		public Literal(String name, CharPredicate charMatcher, CharPredicate firstCharMatcher,
-				char[] matchChars, Inclusion includeCondMatchInRes, Object toStringSrc) {
-			super(name, charMatcher, firstCharMatcher, matchChars, includeCondMatchInRes, toStringSrc);
+		public Literal(String name, CharPredicate charMatcher, char[] firstMatchChars, Inclusion includeCondMatchInRes, Object toStringSrc) {
+			super(name, charMatcher, firstMatchChars, includeCondMatchInRes, toStringSrc);
 		}
 
 
 		@Override
 		public Literal copy() {
-			return new Literal(super.name, super.charMatcher, super.origMatcher, super.firstMatchChars, super.includeMatchInRes, super.toStringSrc);
+			return new Literal(super.name, super.charMatcher, super.firstMatchChars, super.includeMatchInRes, super.toStringSrc);
 		}
 
 	}
@@ -294,14 +299,13 @@ public class CharConditions {
 	 */
 	public static class ContainsFirstSpecial extends BaseCharParserMatchable {
 
-		public ContainsFirstSpecial(String name, CharList chars, Inclusion includeCondMatchInRes) {
-			super(name, chars, includeCondMatchInRes);
+		public ContainsFirstSpecial(String name, CharPredicate charMatcher, char[] firstMatchChars, Inclusion includeCondMatchInRes, Object toStringSrc) {
+			super(name, charMatcher, null, firstMatchChars, includeCondMatchInRes, toStringSrc);
 		}
 
 
-		public ContainsFirstSpecial(String name, CharPredicate charMatcher, CharPredicate firstCharMatcher,
-				char[] matchChars, Inclusion includeCondMatchInRes, Object toStringSrc) {
-			super(name, charMatcher, firstCharMatcher, matchChars, includeCondMatchInRes, toStringSrc);
+		public ContainsFirstSpecial(String name, CharPredicate charMatcher, CharParserPredicate firstCharMatcher, char[] firstMatchChars, Inclusion includeCondMatchInRes) {
+			super(name, charMatcher, firstCharMatcher, firstMatchChars, includeCondMatchInRes, null);
 		}
 
 
@@ -331,7 +335,7 @@ public class CharConditions {
 
 		@Override
 		public ContainsFirstSpecial copy() {
-			return new ContainsFirstSpecial(super.name, super.charMatcher, super.origMatcher, super.firstMatchChars, super.includeMatchInRes, super.toStringSrc);
+			return new ContainsFirstSpecial(super.name, super.charMatcher, super.firstMatchChars, super.includeMatchInRes, super.toStringSrc);
 		}
 
 	}
@@ -346,13 +350,12 @@ public class CharConditions {
 	public static class Contains extends ContainsFirstSpecial {
 
 		public Contains(String name, CharList chars, Inclusion includeCondMatchInRes) {
-			super(name, chars, includeCondMatchInRes);
+			super(name, chars::contains, null, chars.toArray(), includeCondMatchInRes);
 		}
 
 
-		public Contains(String name, CharPredicate charMatcher,
-				char[] matchChars, Inclusion includeCondMatchInRes, Object toStringSrc) {
-			super(name, charMatcher, charMatcher, matchChars, includeCondMatchInRes, toStringSrc);
+		public Contains(String name, CharPredicate charMatcher, char[] firstMatchChars, Inclusion includeCondMatchInRes, Object toStringSrc) {
+			super(name, charMatcher, firstMatchChars, includeCondMatchInRes, toStringSrc);
 		}
 
 
@@ -373,13 +376,12 @@ public class CharConditions {
 	public static class End extends BaseCharParserMatchable {
 
 		public End(String name, CharList chars, Inclusion includeCondMatchInRes) {
-			super(name, chars, includeCondMatchInRes);
+			super(name, chars::contains, null, chars.toArray(), includeCondMatchInRes, null);
 		}
 
 
-		public End(String name, CharPredicate charMatcher, CharPredicate firstCharMatcher,
-				char[] matchChars, Inclusion includeCondMatchInRes, Object toStringSrc) {
-			super(name, charMatcher, firstCharMatcher, matchChars, includeCondMatchInRes, toStringSrc);
+		public End(String name, CharPredicate charMatcher, char[] firstMatchChars, Inclusion includeCondMatchInRes, Object toStringSrc) {
+			super(name, charMatcher, null, firstMatchChars, includeCondMatchInRes, toStringSrc);
 		}
 
 
@@ -400,7 +402,7 @@ public class CharConditions {
 
 		@Override
 		public End copy() {
-			return new End(super.name, super.charMatcher, super.origMatcher, super.firstMatchChars, super.includeMatchInRes, super.toStringSrc);
+			return new End(super.name, super.charMatcher, super.firstMatchChars, super.includeMatchInRes, super.toStringSrc);
 		}
 
 	}
@@ -421,9 +423,8 @@ public class CharConditions {
 		}
 
 
-		public EndNotPrecededBy(String name, CharPredicate charMatcher, CharPredicate firstCharMatcher,
-				char[] matchChars, Inclusion includeCondMatchInRes, Object toStringSrc, CharListReadOnly notPrecededBy) {
-			super(name, charMatcher, firstCharMatcher, matchChars, includeCondMatchInRes, toStringSrc);
+		public EndNotPrecededBy(String name, CharPredicate charMatcher, char[] firstMatchChars, Inclusion includeCondMatchInRes, Object toStringSrc, CharListReadOnly notPrecededBy) {
+			super(name, charMatcher, null, firstMatchChars, includeCondMatchInRes, toStringSrc);
 			super.notPreceding = notPrecededBy;
 		}
 
@@ -461,8 +462,7 @@ public class CharConditions {
 
 		@Override
 		public EndNotPrecededBy copy() {
-			EndNotPrecededBy copy = new EndNotPrecededBy(super.name, super.charMatcher, super.origMatcher,
-					super.firstMatchChars, super.includeMatchInRes, super.toStringSrc, super.notPreceding);
+			EndNotPrecededBy copy = new EndNotPrecededBy(super.name, super.charMatcher, super.firstMatchChars, super.includeMatchInRes, super.toStringSrc, super.notPreceding);
 			BaseCharParserMatchable.copyTo(this, copy);
 			return copy;
 		}
