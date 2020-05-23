@@ -4,7 +4,30 @@ This project does its best to adhere to [Semantic Versioning](http://semver.org/
 
 
 --------
-### [0.3.0](N/A) - 2019-03-26
+### [0.4.0](N/A) - 2020-05-23
+#### Added
+* `CharConditions.Identifier` added to greatly simplify code parser edge cases in `jparse-code`
+* Moved `Inclusion` enum from `JTextParser` into this library
+
+#### Changed
+* Merged `StringBoundedParserBuilder` into `StringParserBuilder`
+* `CharConditionPipe.createPipeAllRequired()` now only supports a single list of parser conditions rather than multiple lists; switch to uses `OptionalSuffix`
+* `CharCompoundConditions` `StartFilter` consolidated into `Filter`
+* `CharConditions` `Start` consolidated into `Literal`
+* `StringConditions` `Start` consolidated into `Literal`
+* Added and improved unit tests
+
+#### Fixed
+* Several parser issues with `CharConditionPipe`, added read-ahead for optional conditions so that conditional pipes finish once required conditions are done and future input does not match any optional conditions
+
+#### Removed
+* `StringBoundedParserBuilder` (merged with `StringParserBuilder`)
+* Removed `CharConditionPipe` `AllRequired` and `AllRequiredPlain` and `createPipePlainAllRequired()` since an `OptionalSuffix` constructed with a single list of parser conditions is equivalent
+* Removed `CharConditionPipe` `OptionalSuffixesAny` and `createPipeOptionalSuffixesAny()` since it was unused
+
+
+--------
+### [0.3.0](https://github.com/TeamworkGuy2/JTextTokenizer/commit/26b81037937805dcb1a76731f50926b037fa9eb9) - 2019-03-30
 Performance refactor, reduced average real world JParseCode run times by ~10%
 #### Changed
 * Extensive constructor parameter changes across multiple classes to allow for more efficient field types, copy() calls, and predicates for char tests

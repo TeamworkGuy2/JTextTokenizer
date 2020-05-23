@@ -27,7 +27,6 @@ public class CharCompoundConditions {
 		boolean anyComplete = false;
 		boolean failed = false;
 		int acceptedCount;
-		StringBuilder dstBuf = new StringBuilder();
 		TextFragmentRefImplMut coords = new TextFragmentRefImplMut();
 		Runnable resetFunc;
 		String name;
@@ -63,18 +62,6 @@ public class CharCompoundConditions {
 		@Override
 		public String name() {
 			return name;
-		}
-
-
-		@Override
-		public StringBuilder getParserDestination() {
-			return this.dstBuf;
-		}
-
-
-		@Override
-		public void setParserDestination(StringBuilder parserDestination) {
-			this.dstBuf = parserDestination;
 		}
 
 
@@ -122,7 +109,6 @@ public class CharCompoundConditions {
 			matchingCondsSize = origCnt;
 			anyComplete = false;
 			failed = false;
-			dstBuf.setLength(0);
 			coords = new TextFragmentRefImplMut();
 			acceptedCount = 0;
 
@@ -168,11 +154,11 @@ public class CharCompoundConditions {
 
 
 
-	/** Accept input that matches this parse condition
+	/** Accept input that matches any of the parse conditions
 	 * @author TeamworkGuy2
-	 * @since 2015-6-26
+	 * @since 2015-2-10
 	 */
-	public static class Filter extends StartFilter {
+	public static class Filter extends BaseFilter {
 
 		public Filter(String name, boolean doCopyConds, CharParser[] conds) {
 			super(name, doCopyConds, conds);
@@ -180,32 +166,7 @@ public class CharCompoundConditions {
 
 
 		@Override
-		public Filter copy() {
-			return new Filter(super.name, true, super.originalConds);
-		}
-
-	}
-
-
-	/** Accept input that matches any of the parse conditions
-	 * @author TeamworkGuy2
-	 * @since 2015-2-10
-	 */
-	public static class StartFilter extends BaseFilter {
-
-		public StartFilter(String name, boolean doCopyConds, CharParser[] conds) {
-			super(name, doCopyConds, conds);
-		}
-
-
-		@Override
 		public boolean acceptNext(char ch, TextParser buf) {
-			int off = super.dstBuf.length();
-			if(super.acceptedCount > off) {
-				super.failed = true;
-				return false;
-			}
-
 			byte found = super.updateMatches(ch, buf);
 			if(found == 2) {
 				super.anyComplete = true;
@@ -216,7 +177,6 @@ public class CharCompoundConditions {
 					super.coords.setStart(buf);
 				}
 				super.acceptedCount++;
-				super.dstBuf.append(ch);
 				if(super.anyComplete) {
 					super.coords.setEnd(buf);
 				}
@@ -237,8 +197,8 @@ public class CharCompoundConditions {
 
 
 		@Override
-		public StartFilter copy() {
-			return new StartFilter(super.name, true, super.originalConds);
+		public Filter copy() {
+			return new Filter(super.name, true, super.originalConds);
 		}
 
 	}
@@ -274,7 +234,6 @@ public class CharCompoundConditions {
 					super.coords.setStart(buf);
 				}
 				super.acceptedCount++;
-				super.dstBuf.append(ch);
 				if(super.anyComplete) {
 					super.coords.setEnd(buf);
 				}

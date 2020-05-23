@@ -57,7 +57,7 @@ public class CharParserMatchableFactory<P extends CharParser> implements CharPar
 			}
 			this.conditions = conds;
 			this.firstCharConds = charConds;
-			this.conditionSet = new CharCompoundConditions.StartFilter(name, false, conds);
+			this.conditionSet = new CharCompoundConditions.Filter(name, false, conds);
 		}
 	}
 

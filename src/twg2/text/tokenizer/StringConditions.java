@@ -5,7 +5,6 @@ import java.util.Collection;
 
 import twg2.arrays.ArrayManager;
 import twg2.arrays.ArrayUtil;
-import twg2.parser.Inclusion;
 import twg2.parser.condition.text.CharParser;
 import twg2.parser.condition.text.CharParserMatchable;
 import twg2.parser.condition.text.CharParserPredicate;
@@ -87,18 +86,6 @@ public class StringConditions {
 		@Override
 		public String name() {
 			return name;
-		}
-
-
-		@Override
-		public StringBuilder getParserDestination() {
-			return this.dstBuf;
-		}
-
-
-		@Override
-		public void setParserDestination(StringBuilder parserDestination) {
-			this.dstBuf = parserDestination;
 		}
 
 
@@ -206,28 +193,9 @@ public class StringConditions {
 
 	/** A matcher that finds exact string sequences
 	 */
-	public static class Literal extends Start {
+	public static class Literal extends BaseStringParser {
 
 		public Literal(String name, String[] strs, Inclusion includeCondMatchInRes) {
-			super(name, strs, includeCondMatchInRes);
-		}
-
-
-		@Override
-		public Literal copy() {
-			return new Literal(name, originalStrs, includeMatchInRes);
-		}
-
-	}
-
-
-
-
-	/** A matcher that finds starts-with sequences
-	 */
-	public static class Start extends BaseStringParser {
-
-		public Start(String name, String[] strs, Inclusion includeCondMatchInRes) {
 			super(name, strs, includeCondMatchInRes);
 		}
 
@@ -265,8 +233,8 @@ public class StringConditions {
 
 
 		@Override
-		public Start copy() {
-			return new Start(super.name, super.originalStrs, super.includeMatchInRes);
+		public Literal copy() {
+			return new Literal(super.name, super.originalStrs, super.includeMatchInRes);
 		}
 
 	}

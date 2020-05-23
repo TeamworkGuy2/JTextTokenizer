@@ -3,7 +3,7 @@ package twg2.text.tokenizer.test;
 import org.junit.Assert;
 
 import twg2.parser.condition.text.CharParser;
-import twg2.parser.textParser.TextIteratorParser;
+import twg2.parser.textParser.TextCharsParser;
 import twg2.parser.textParser.TextParser;
 
 /**
@@ -12,22 +12,20 @@ import twg2.parser.textParser.TextParser;
  */
 public interface ParserTestUtils {
 
-	// Test also ensures that conditions work as expected when recycled (if possible) and when copied
+	/** Run a hasNext()/acceptNext() loop using the given parser 'cond'.
+	 * The test is run with the condition recycled (if possible) and copied to ensure that results are the same.
+	 */
 	public static void parseTest(boolean expectComplete, boolean expectFailed, String name, CharParser cond, String src) {
 		cond = cond.copyOrReuse();
-		_parseTest(expectComplete, expectFailed, name, cond, src, null);
+		_parseTest(expectComplete, expectFailed, name, cond, src, src);
 		cond = cond.copy();
-		_parseTest(expectComplete, expectFailed, name, cond, src, null);
+		_parseTest(expectComplete, expectFailed, name, cond, src, src);
 	}
 
 
-	/** If parsing is successfully, the result text should be identical to the src text
+	/** Run a hasNext()/acceptNext() loop using the given parser 'cond'.
+	 * The test is run with the condition recycled (if possible) and copied to ensure that results are the same.
 	 */
-	public static void parseTestSameParsed(boolean expectComplete, boolean expectFailed, String name, CharParser cond, String src) {
-		parseTest(expectComplete, expectFailed, name, cond, src, src);
-	}
-
-
 	public static void parseTest(boolean expectComplete, boolean expectFailed, String name, CharParser cond, String src, String expectedParsedResult) {
 		cond = cond.copyOrReuse();
 		_parseTest(expectComplete, expectFailed, name, cond, src, expectedParsedResult);
@@ -37,7 +35,7 @@ public interface ParserTestUtils {
 
 
 	public static void _parseTest(boolean expectComplete, boolean expectFailed, String name, CharParser cond, String src, String srcExpect) {
-		TextParser buf = TextIteratorParser.of(src);
+		TextParser buf = TextCharsParser.of(src);
 
 		while(buf.hasNext()) {
 			char ch = buf.nextChar();
@@ -54,6 +52,5 @@ public interface ParserTestUtils {
 			Assert.assertEquals(srcExpect, parsedText);
 		}
 	}
-
 
 }

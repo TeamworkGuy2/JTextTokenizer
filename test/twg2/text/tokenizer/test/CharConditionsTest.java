@@ -5,10 +5,10 @@ import static twg2.text.tokenizer.test.ParserTestUtils.parseTest;
 import org.junit.Test;
 
 import twg2.collections.primitiveCollections.CharArrayList;
-import twg2.parser.Inclusion;
 import twg2.parser.condition.text.CharParser;
 import twg2.ranges.CharSearchSet;
 import twg2.text.tokenizer.CharConditions;
+import twg2.text.tokenizer.Inclusion;
 
 /**
  * @author TeamworkGuy2
@@ -16,11 +16,10 @@ import twg2.text.tokenizer.CharConditions;
  */
 public class CharConditionsTest {
 
-
 	@Test
-	public void startCharCondition() {
-		String name = "StartCharCondition";
-		CharParser cond = new CharConditions.Start(name, CharArrayList.of('A', 'B', '='), Inclusion.INCLUDE);
+	public void literalCharCondition() {
+		String name = "LiteralCharCondition";
+		CharParser cond = new CharConditions.Literal(name, CharArrayList.of('A', 'B', '='), Inclusion.INCLUDE);
 
 		parseTest(true, false, name, cond, "A");
 		parseTest(true, false, name, cond, "B");
@@ -51,7 +50,7 @@ public class CharConditionsTest {
 
 		parseTest(true, false, name, cond, "stuff\"");
 		parseTest(true, false, name, cond, "!");
-		parseTest(true, false, name, cond, "invalid\\! valid!");
+		parseTest(true, false, name, cond, "invalid\\! valid!", " valid!");
 		parseTest(false, false, name, cond, "abcdefghijklmnopqrstuvwxyz@'");
 		parseTest(false, true, name, cond, "=!=");
 		parseTest(false, false, name, cond, "\\!");
@@ -63,12 +62,33 @@ public class CharConditionsTest {
 		String name = "ContainsFirstSpecialCondition";
 		CharParser cond = newIdentifierTokenizer();
 
-		parseTest(true, false, name, cond, " - $_AzaZ90");
-		parseTest(true, false, name, cond, "A");
-		parseTest(true, false, name, cond, "A0a");
 		parseTest(false, true, name, cond, "A0a ");
 		parseTest(false, true, name, cond, "&amp;");
-		parseTest(true, false, name, cond, "&*; withValidEndingRunOn");
+
+		parseTest(true, false, name, cond, " - $_AzaZ90", "$_AzaZ90");
+		parseTest(true, false, name, cond, "A");
+		parseTest(true, false, name, cond, "A0a");
+		parseTest(true, false, name, cond, "0__0", "__0");
+		parseTest(true, false, name, cond, "&*; withValidEndingRunOn", "withValidEndingRunOn");
+	}
+
+
+	@Test
+	public void identifierCondition() {
+		String name = "Identifier";
+		CharParser cond = CharConditions.Identifier.newInstance(name);
+
+		parseTest(false, true, name, cond, "A0a ");
+		parseTest(false, true, name, cond, "&amp;");
+		parseTest(false, true, name, cond, "aa..bb..", "aa");
+		parseTest(false, true, name, cond, "s.text...", "s.text");
+
+		parseTest(true, false, name, cond, " - $_AzaZ90", "$_AzaZ90");
+		parseTest(true, false, name, cond, "A");
+		parseTest(true, false, name, cond, "A0a");
+		parseTest(true, false, name, cond, "0__0", "__0");
+		parseTest(true, false, name, cond, "&*; with.Valid.Ending.RunOn", "with.Valid.Ending.RunOn");
+		parseTest(true, false, name, cond, " .a2.b.cd", "a2.b.cd");
 	}
 
 

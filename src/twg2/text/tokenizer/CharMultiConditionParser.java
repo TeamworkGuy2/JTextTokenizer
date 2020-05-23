@@ -5,7 +5,7 @@ import java.util.Collection;
 import java.util.Map.Entry;
 
 import twg2.parser.condition.text.CharParser;
-import twg2.parser.textFragment.TextConsumer;
+import twg2.parser.textFragment.TextFragmentConsumer;
 import twg2.parser.textFragment.TextFragmentRef;
 import twg2.parser.textParser.TextParser;
 import twg2.text.tokenizer.analytics.ParserAction;
@@ -29,9 +29,9 @@ public class CharMultiConditionParser {
 	static class MatcherState {
 		int startOff;
 		CharParser parser;
-		TextConsumer consumer;
+		TextFragmentConsumer consumer;
 
-		public MatcherState(int startOff, CharParser parser, TextConsumer consumer) {
+		public MatcherState(int startOff, CharParser parser, TextFragmentConsumer consumer) {
 			this.startOff = startOff;
 			this.parser = parser;
 			this.consumer = consumer;
@@ -43,7 +43,7 @@ public class CharMultiConditionParser {
 
 
 	private CharParserFactory[] conditionParserFactories;
-	private TextConsumer[] conditionConsumers;
+	private TextFragmentConsumer[] conditionConsumers;
 	private ArrayList<MatcherState> curCompoundMatchers;
 	private TypedLogger<ParserAction, ?> parseLog;
 
@@ -52,9 +52,9 @@ public class CharMultiConditionParser {
 	 * @param parseLog optional performance tracker, can be null
 	 */
 	@SafeVarargs
-	public CharMultiConditionParser(TypedLogger<ParserAction, ?> parseLog, Entry<CharParserFactory, TextConsumer>... conditions) {
+	public CharMultiConditionParser(TypedLogger<ParserAction, ?> parseLog, Entry<CharParserFactory, TextFragmentConsumer>... conditions) {
 		var cpfs = new CharParserFactory[conditions.length];
-		var ccs = new TextConsumer[conditions.length];
+		var ccs = new TextFragmentConsumer[conditions.length];
 		int compoundCnt = 0;
 		for(int i = 0, size = conditions.length; i < size; i++) {
 			var cond = conditions[i];
@@ -69,10 +69,10 @@ public class CharMultiConditionParser {
 	}
 
 
-	public CharMultiConditionParser(TypedLogger<ParserAction, ?> parseLog, Collection<? extends Entry<CharParserFactory, TextConsumer>> conditions) {
+	public CharMultiConditionParser(TypedLogger<ParserAction, ?> parseLog, Collection<? extends Entry<CharParserFactory, TextFragmentConsumer>> conditions) {
 		var condCount = conditions.size();
 		var cpfs = new CharParserFactory[condCount];
-		var ccs = new TextConsumer[condCount];
+		var ccs = new TextFragmentConsumer[condCount];
 		int compoundCnt = 0;
 		int i = 0;
 		for(var cond : conditions) {
@@ -210,12 +210,11 @@ public class CharMultiConditionParser {
 	}
 
 
-	private static TextFragmentRef consumeToken(CharParser parser, TextConsumer consumer) {
-		CharSequence text = parser.getParserDestination();
+	private static TextFragmentRef consumeToken(CharParser parser, TextFragmentConsumer consumer) {
 		TextFragmentRef frag = parser.getMatchedTextCoords();
 		int off = frag.getOffsetStart();
 
-		consumer.accept(text, off, frag.getOffsetEnd() - off, frag.getLineStart(), frag.getColumnStart(), frag.getLineEnd(), frag.getColumnEnd());
+		consumer.accept(off, frag.getOffsetEnd() - off, frag.getLineStart(), frag.getColumnStart(), frag.getLineEnd(), frag.getColumnEnd());
 		return frag;
 	}
 

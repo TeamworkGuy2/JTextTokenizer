@@ -5,7 +5,6 @@ import java.util.Arrays;
 import twg2.collections.primitiveCollections.CharList;
 import twg2.collections.primitiveCollections.CharListReadOnly;
 import twg2.functions.predicates.CharPredicate;
-import twg2.parser.Inclusion;
 import twg2.parser.condition.text.CharParser;
 import twg2.parser.condition.text.CharParserMatchable;
 import twg2.parser.condition.text.CharParserPredicate;
@@ -13,6 +12,7 @@ import twg2.parser.textFragment.TextFragmentRef;
 import twg2.parser.textFragment.TextFragmentRefImplMut;
 import twg2.parser.textParser.TextParser;
 import twg2.parser.textParserUtils.ReadIsMatching;
+import twg2.ranges.CharSearchSet;
 
 /**
  * @author TeamworkGuy2
@@ -28,16 +28,12 @@ public class CharConditions {
 	public static abstract class BaseCharParser implements CharParser {
 		boolean anyComplete = false;
 		boolean failed = false;
-		char acceptedChar = 0;
 		/** count all accepted characters (including characters not explicitly part of 'matchingChars') */
 		int acceptedCount = 0;
 		/** count accepted characters (only from 'matchingChars') */
 		int matchCount = 0;
-		CharListReadOnly notPreceding;
-		boolean lastCharNotMatch;
 		Inclusion includeMatchInRes;
 		TextFragmentRefImplMut coords = new TextFragmentRefImplMut();
-		StringBuilder dstBuf = new StringBuilder();
 		/** Sets up accept and reset functions given this object */
 		CharPredicate charMatcher;
 		Object toStringSrc;
@@ -62,18 +58,6 @@ public class CharConditions {
 		@Override
 		public TextFragmentRef getMatchedTextCoords() {
 			return coords;
-		}
-
-
-		@Override
-		public StringBuilder getParserDestination() {
-			return dstBuf;
-		}
-
-
-		@Override
-		public void setParserDestination(StringBuilder parserDestination) {
-			this.dstBuf = parserDestination;
 		}
 
 
@@ -113,8 +97,6 @@ public class CharConditions {
 			if(this.matchCount == 0) {
 				this.coords.setStart(buf);
 			}
-			this.dstBuf.append(ch);
-			this.acceptedChar = ch;
 			this.acceptedCount++;
 			this.matchCount++;
 		}
@@ -127,11 +109,9 @@ public class CharConditions {
 
 			if(this.anyComplete) {
 				this.acceptedCount++;
-				this.acceptedChar = ch;
 				this.coords.setEnd(buf);
 			}
 
-			this.dstBuf.append(ch);
 			this.matchCount++;
 		}
 
@@ -139,12 +119,9 @@ public class CharConditions {
 		void reset() {
 			anyComplete = false;
 			failed = false;
-			acceptedChar = 0;
 			acceptedCount = 0;
 			matchCount = 0;
-			lastCharNotMatch = false;
 			coords = new TextFragmentRefImplMut();
-			dstBuf.setLength(0);
 		}
 
 
@@ -224,14 +201,14 @@ public class CharConditions {
 	 * @author TeamworkGuy2
 	 * @since 2015-2-10
 	 */
-	public static class Start extends BaseCharParserMatchable {
+	public static class Literal extends BaseCharParserMatchable {
 
-		public Start(String name, CharList chars, Inclusion includeCondMatchInRes) {
+		public Literal(String name, CharList chars, Inclusion includeCondMatchInRes) {
 			super(name, chars::contains, null, chars.toArray(), includeCondMatchInRes, null);
 		}
 
 
-		public Start(String name, CharPredicate charMatcher, char[] firstMatchChars, Inclusion includeCondMatchInRes, Object toStringSrc) {
+		public Literal(String name, CharPredicate charMatcher, char[] firstMatchChars, Inclusion includeCondMatchInRes, Object toStringSrc) {
 			super(name, charMatcher, null, firstMatchChars, includeCondMatchInRes, toStringSrc);
 		}
 
@@ -255,30 +232,6 @@ public class CharConditions {
 				super.failed = true;
 				return false;
 			}
-		}
-
-
-		@Override
-		public Start copy() {
-			return new Start(super.name, super.charMatcher, super.firstMatchChars, super.includeMatchInRes, super.toStringSrc);
-		}
-
-	}
-
-
-
-
-	/**
-	 */
-	public static class Literal extends Start {
-
-		public Literal(String name, CharList chars, Inclusion includeCondMatchInRes) {
-			super(name, chars, includeCondMatchInRes);
-		}
-
-
-		public Literal(String name, CharPredicate charMatcher, char[] firstMatchChars, Inclusion includeCondMatchInRes, Object toStringSrc) {
-			super(name, charMatcher, firstMatchChars, includeCondMatchInRes, toStringSrc);
 		}
 
 
@@ -415,17 +368,19 @@ public class CharConditions {
 	 * @since 2015-2-21
 	 */
 	public static class EndNotPrecededBy extends BaseCharParserMatchable {
+		boolean lastCharNotMatch;
+		CharListReadOnly notPreceding;
 
 
 		public EndNotPrecededBy(String name, CharList chars, Inclusion includeCondMatchInRes, CharListReadOnly notPrecededBy) {
 			super(name, chars::contains, null, chars.toArray(), includeCondMatchInRes, null);
-			super.notPreceding = notPrecededBy;
+			this.notPreceding = notPrecededBy;
 		}
 
 
 		public EndNotPrecededBy(String name, CharPredicate charMatcher, char[] firstMatchChars, Inclusion includeCondMatchInRes, Object toStringSrc, CharListReadOnly notPrecededBy) {
 			super(name, charMatcher, null, firstMatchChars, includeCondMatchInRes, toStringSrc);
-			super.notPreceding = notPrecededBy;
+			this.notPreceding = notPrecededBy;
 		}
 
 
@@ -438,16 +393,17 @@ public class CharConditions {
 
 			if(super.matchCount == 0 && buf.hasPrevChar()) {
 				char prevCh = buf.prevChar();
-				if(super.notPreceding.contains(prevCh)) {
-					super.lastCharNotMatch = true;
+				if(this.notPreceding.contains(prevCh)) {
+					this.lastCharNotMatch = true;
 				}
 			}
 
-			if(super.notPreceding.contains(ch)) {
-				super.lastCharNotMatch = true;
+			if(this.notPreceding.contains(ch)) {
+				this.lastCharNotMatch = true;
 				return true;
 			}
-			if(super.lastCharNotMatch) {
+			if(this.lastCharNotMatch) {
+				this.lastCharNotMatch = false;
 				super.reset();
 				return true;
 			}
@@ -462,9 +418,103 @@ public class CharConditions {
 
 		@Override
 		public EndNotPrecededBy copy() {
-			EndNotPrecededBy copy = new EndNotPrecededBy(super.name, super.charMatcher, super.firstMatchChars, super.includeMatchInRes, super.toStringSrc, super.notPreceding);
+			EndNotPrecededBy copy = new EndNotPrecededBy(super.name, super.charMatcher, super.firstMatchChars, super.includeMatchInRes, super.toStringSrc, this.notPreceding);
 			BaseCharParserMatchable.copyTo(this, copy);
 			return copy;
+		}
+
+	}
+
+
+
+
+	/** Example of a parser for programming identifiers (e.g. 'anotherVar', '$thing', or 'Namespace.Compound.Class_Name$1').
+	 * Allows periods within the string; looks ahead to see if the string ends with a period and if so ends before it.
+	 * @author TeamworkGuy2
+	 * @since 2020-05-22
+	 */
+	public static class Identifier extends BaseCharParserMatchable {
+
+		public Identifier(String name, CharPredicate charMatcher, CharParserPredicate firstCharMatcher, char[] firstMatchChars, Inclusion includeCondMatchInRes, Object toStringSrc) {
+			super(name, charMatcher, firstCharMatcher, firstMatchChars, includeCondMatchInRes, toStringSrc);
+		}
+
+
+		@Override
+		public boolean acceptNext(char ch, TextParser buf) {
+			// fail if the condition is already complete
+			if(super.anyComplete) {
+				super.failed = true;
+				return false;
+			}
+
+			if(super.matchCount == 0 ? super.firstCharMatcher.test(ch, buf) : super.charMatcher.test(ch)) {
+				super.acceptedCompletedChar(ch, buf);
+
+				// this condition doesn't complete until the first non-matching character not preceded by the special not-end char
+				// i.e. if the special not-end char is '.' then the string 'ab.c ' can end at 'b' or 'c', but not '.'
+				if(isEnd(buf, super.charMatcher, '.')) {
+					super.anyComplete = true;
+					super.coords.setEnd(buf); // TODO somewhat inefficient, but we can't be sure that calls to this function are sequential parser positions, so we can't move this to the failure condition
+				}
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
+
+
+		boolean isEnd(TextParser buf, CharPredicate condition, char notChar) {
+			int read = 0;
+			boolean cont = false;
+			if(buf.hasNext()) {
+				char ch = buf.nextChar();
+				read++;
+				// last char cannot be special not-end char
+				if(ch == notChar) {
+					// if there's another char check it
+					if(buf.hasNext()) {
+						char ch2 = buf.nextChar();
+						read++;
+						cont = ch2 != notChar && condition.test(ch2); // is the next char after the not-end char a valid end char
+					}
+					else {
+						// else leave 'cont' false and end now before invalid end char
+					}
+				}
+				// regular char, check for a match
+				else {
+					cont = condition.test(ch);
+				}
+				buf.unread(read);
+			}
+			return !cont;
+		}
+
+
+		@Override
+		public Identifier copy() {
+			return new Identifier(super.name, super.charMatcher, super.firstCharMatcher, super.firstMatchChars, super.includeMatchInRes, super.toStringSrc);
+		}
+
+
+		/**
+		 * @return a basic parser for a string of contiguous characters matching those allowed in identifiers (e.g. 'anotherVar', '$thing', or '_stspr')
+		 */
+		public static CharConditions.BaseCharParserMatchable newInstance(String name) {
+			var firstCharSet = new CharSearchSet();
+			firstCharSet.addChar('$');
+			firstCharSet.addChar('_');
+			firstCharSet.addRange('a', 'z');
+			firstCharSet.addRange('A', 'Z');
+			CharParserPredicate firstCharCheck = (char ch, TextParser parser) -> (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || ch == '_' || ch == '$';
+
+			CharPredicate charCheck = (char ch) -> {
+				return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') || ch == '_' || ch == '$' || ch == '.';
+			};
+
+			return new Identifier(name, charCheck, firstCharCheck, firstCharSet.toCharList().toArray(), Inclusion.INCLUDE, "[A-Za-z_$.]");
 		}
 
 	}

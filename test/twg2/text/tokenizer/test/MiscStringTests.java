@@ -1,9 +1,7 @@
 package twg2.text.tokenizer.test;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.Function;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -11,15 +9,10 @@ import org.junit.Test;
 import twg2.arrays.ArrayUtil;
 import twg2.junitassist.checks.CheckTask;
 import twg2.junitassist.checks.TestData;
-import twg2.parser.Inclusion;
-import twg2.parser.condition.text.CharParser;
 import twg2.parser.textParser.TextIteratorParser;
 import twg2.parser.textParser.TextParser;
-import twg2.parser.textParserUtils.EscapeSequences;
 import twg2.text.stringSearch.StringCompare;
 import twg2.text.stringSearch.StringIndex;
-import twg2.text.tokenizer.CharParserFactory;
-import twg2.text.tokenizer.StringBoundedParserBuilder;
 
 /**
  * @author TeamworkGuy2
@@ -69,53 +62,13 @@ public class MiscStringTests {
 		check(tool.nextIf('b', dst), 1, "could not read 'b'");
 		check(tool.nextIf(' ', dst), 1, "could not read ' '");
 		check(tool.nextIf('a', 'b', 0, dst), 4, "could not read 'a' or 'b'");
-		tool.nextIf((c) -> (true), 0, dst);
+		tool.nextIf((c) -> true, 0, dst);
 
-		tool.nextIf((c) -> (true), 3, dst);
-		tool.nextIf((c) -> (ArrayUtil.indexOf(new char[] {'1', '2', '3', '4', '5', ' '}, c) > -1) , 0, dst);
-		tool.nextIf((c) -> (ArrayUtil.indexOf(new char[] {'1', '2', '3', '4', '5', ' '}, c) > -1) , 0, dst);
+		tool.nextIf((c) -> true, 3, dst);
+		tool.nextIf((c) -> (ArrayUtil.indexOf(new char[] {'1', '2', '3', '4', '5', ' '}, c) > -1), 0, dst);
+		tool.nextIf((c) -> (ArrayUtil.indexOf(new char[] {'1', '2', '3', '4', '5', ' '}, c) > -1), 0, dst);
 
 		Assert.assertEquals("parsed: '" + dst.toString() + "', does not match: '" + line + "'", line, dst.toString());
-	}
-
-
-	@Test
-	public void stringBoundedSegmentParserTest() throws IOException {
-
-		// single-character start and end markers and single-character escape markers
-		String[] strs = new String[] {   "\"a \\\" b \\\"", "\"\" !", "alpha", "\"a \n\\\"\\\" z\" echo" };
-		String[] expect = new String[] { "\"a \" b \"",       "\"\"",     "",      "\"a \n\"\" z\"" };
-
-		var sbpb = new StringBoundedParserBuilder("stringBoundedSegmentParserTest");
-		sbpb.addStartEndNotPrecededByMarkers("string literal", '"', '\\', '"', Inclusion.INCLUDE);
-		CharParserFactory parser1 = sbpb.build();
-
-		Function<String, String> escSeqDecoder = EscapeSequences.unicodeEscapeDecoder();
-		CheckTask.assertTests(strs, expect, (String s, Integer i) -> {
-			StringBuilder dst = new StringBuilder();
-			//Assert.assertTrue("i=" + i + " first char '" + s.charAt(0) + "' of '" + s + "'", parser1.isMatch(s.charAt(0)));
-			CharParser cond = parser1.createParser();
-			cond.readConditional(TextIteratorParser.of(s), dst);
-			return escSeqDecoder.apply(dst.toString());
-		});
-
-		// TODO reimplement string markers
-		// multi-character start and end markers and multi-character escape markers
-		//strs = new String[] {   "to /**string @@/** and @@**/", "/**/", "alpha", "@@/**start \n@@/**@@**/ end**/ echo" };
-		//expect = new String[] { "/**string @@/** and **/",      "/**/", "",      "/**start \n@@/****/ end**/" };
-		/*
-		settings.setEscapeString("@@")
-			.setHandleEscapes(true)
-			.setReadMultiline(true);
-		input = new ParserHelper();
-		*/
-		//StringBoundedParser parser2 = new StringBoundedParser(settings, input, new String[] {"/**"}, new String[] {"**/"});
-		/*
-		Check.assertTests(strs, expect, "", "mismatch", (s) -> {
-			dst.setLength(0);
-			return parser2.readElement(LineBufferImpl.of(s), dst).toString();
-		});
-		*/
 	}
 
 
