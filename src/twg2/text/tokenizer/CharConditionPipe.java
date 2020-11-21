@@ -287,6 +287,12 @@ public class CharConditionPipe {
 
 
 		@Override
+		public char[] getFirstChars() {
+			return ((CharParserMatchable)super.conditionSets[0][0]).getFirstChars();
+		}
+
+
+		@Override
 		public TextFragmentRef getMatchedTextCoords() {
 			return this.coords;
 		}
@@ -345,15 +351,14 @@ public class CharConditionPipe {
 				if(super.curSetIndex > 0 || this.firstConditionSetOptional) {
 					if(super.curCondition != null && buf.hasNext()) {
 						// try to read optional parser condition, rewinds the buf after checking ahead
-						var matchCond = peekOptionalConditionSet(buf);
+						var matchIdx = peekOptionalConditionSet(buf);
 
 						// an optional condition read-ahead matched/completed, so use that condition
-						if(matchCond != null) {
+						if(matchIdx > -1) {
 							super.anyComplete = false;
 
 							// reset the matched condition - since it was used to peek ahead
 							var condSet = super.conditionSets[super.curSetIndex];
-							int matchIdx = ArrayUtil.indexOf(condSet, matchCond);
 							@SuppressWarnings("unchecked")
 							var condCopy = (S)condSet[matchIdx].copyOrReuse();
 							condSet[matchIdx] = condCopy;
@@ -395,9 +400,9 @@ public class CharConditionPipe {
 
 		/** Peek ahead to try to match the parser input to any of the current set of conditions.
 		 * Rewind the parser once all conditions fail, one condition completes, or input runs out.
-		 * @return the first condition (by 'conditionSets[]' sub-index) which matches the input {@code buf} until {@link #isComplete()} or has not failed when input runs out.
+		 * @return the first condition index (by 'conditionSets[]' sub-index) which matches the input {@code buf} until {@link #isComplete()} or has not failed when input runs out.
 		 */
-		public S peekOptionalConditionSet(TextParser buf) {
+		public int peekOptionalConditionSet(TextParser buf) {
 			int cnt = 0;
 			var condSet = super.conditionSets[super.curSetIndex];
 			int size = condSet.length;
@@ -443,10 +448,8 @@ public class CharConditionPipe {
 				}
 			}
 
-			// return the matching condition (might have completed or not)
-			@SuppressWarnings("unchecked")
-			var resCond = matchIdx > -1 ? (S)condSet[matchIdx] : null;
-			return resCond;
+			// return the matching condition index (condition might have completed or not)
+			return matchIdx;
 		}
 
 	}

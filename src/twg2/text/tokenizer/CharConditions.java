@@ -155,8 +155,16 @@ public class CharConditions {
 			}
 			// performance optimization for single char matchers
 			else if(firstMatchChars.length == 1) {
+				var ch1 = firstMatchChars[0];
 				this.firstCharMatcher = (char ch, TextParser buf) -> {
-					return firstMatchChars[0] == ch;
+					return ch1 == ch;
+				};
+			}
+			else if(firstMatchChars.length == 2) {
+				var ch1 = firstMatchChars[0];
+				var ch2 = firstMatchChars[1];
+				this.firstCharMatcher = (char ch, TextParser buf) -> {
+					return ch1 == ch || ch2 == ch;
 				};
 			}
 			else {
@@ -173,6 +181,12 @@ public class CharConditions {
 		@Override
 		public CharParserPredicate getFirstCharMatcher() {
 			return firstCharMatcher;
+		}
+
+
+		@Override
+		public char[] getFirstChars() {
+			return firstMatchChars;
 		}
 
 

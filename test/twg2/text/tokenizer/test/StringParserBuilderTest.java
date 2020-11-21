@@ -21,7 +21,7 @@ import twg2.text.tokenizer.StringParserBuilder;
 public class StringParserBuilderTest {
 
 	@Test
-	public void stringParserBuilderTest1() throws IOException {
+	public void startEndNotPrecededByMarkers() throws IOException {
 		// single-character start and end markers and single-character escape markers
 		String[] strs =   { "\"a \\\" b \\\"", "\"\" !", "alpha", "\"a \n\\\"\\\" z\" echo" };
 		String[] expect = { "\"a \" b \"",     "\"\"",   "",      "\"a \n\"\" z\"" };
@@ -47,7 +47,7 @@ public class StringParserBuilderTest {
 
 
 	@Test
-	public void stringParserBuilderTest2() throws IOException {
+	public void startEndNotPrecededByMarkers2() throws IOException {
 		// single-character start and end markers and single-character escape markers
 		String[] strs =   { "\"a \\\" b \\\"", "\"\" !", "alpha", "\"a \n\\\"\\\" z\" echo" };
 		String[] expect = { "\"a \\\" b \\\"", "\"\"",   "a",     "\"a \n\\\"\\\" z\"" };
@@ -55,6 +55,66 @@ public class StringParserBuilderTest {
 		var spb = new StringParserBuilder("stringParserBuilderTest2");
 		spb.addCharLiteralMarker("a", 'a');
 		spb.addStartEndNotPrecededByMarkers("string literal", '"', '\\', '"', Inclusion.INCLUDE);
+		CharParserFactory parser1 = spb.build();
+
+		CheckTask.assertTests(strs, expect, (String s, Integer i) -> {
+			StringBuilder dst = new StringBuilder();
+			CharParser cond = parser1.createParser();
+			cond.readConditional(TextIteratorParser.of(s), dst);
+			return dst.toString();
+		});
+	}
+
+
+	@Test
+	public void addStartEndMarkers() throws IOException {
+		// single-character start and end markers and single-character escape markers
+		String[] strs =   { "[abcdef] -", "@[] + 1", "<tag /> <z/>", "{{start}} -", "@[@[a]b]" };
+		String[] expect = { "[abcdef]",   "@[]",     "<tag />",      "{{start}}", "@[@[a]" };
+
+		var spb = new StringParserBuilder("startEndMarkers");
+		spb.addStartEndMarkers("[]", '[', ']', Inclusion.INCLUDE);
+		spb.addStartEndMarkers("@[]", "@[", ']', Inclusion.INCLUDE);
+		spb.addStartEndMarkers("</>", '<', "/>", Inclusion.INCLUDE);
+		spb.addStartEndMarkers("{{}}", "{{", "}}", Inclusion.INCLUDE);
+		CharParserFactory parser1 = spb.build();
+
+		CheckTask.assertTests(strs, expect, (String s, Integer i) -> {
+			StringBuilder dst = new StringBuilder();
+			CharParser cond = parser1.createParser();
+			cond.readConditional(TextIteratorParser.of(s), dst);
+			return dst.toString();
+		});
+	}
+
+
+	@Test
+	public void charLiteralMarkers() throws IOException {
+		String[] strs =   { "@start -", "start; end;", ";", "@@" };
+		String[] expect = { "@", "start", ";", "@" };
+
+		var spb = new StringParserBuilder("charLiteralMarkers");
+		spb.addCharLiteralMarker("@;", '@', ';');
+		spb.addCharMatcher("start", new char[] { 's', 't', 'a', 'r', 't' });
+		CharParserFactory parser1 = spb.build();
+
+		CheckTask.assertTests(strs, expect, (String s, Integer i) -> {
+			StringBuilder dst = new StringBuilder();
+			CharParser cond = parser1.createParser();
+			cond.readConditional(TextIteratorParser.of(s), dst);
+			return dst.toString();
+		});
+	}
+
+
+	@Test
+	public void stringLiteralMarkers() throws IOException {
+		String[] strs =   { "@start -", "start; end;", "end -", "@@" };
+		String[] expect = { "@", "start", "end", "@" };
+
+		var spb = new StringParserBuilder("charLiteralMarkers");
+		spb.addStringLiteralMarker("@", "@");
+		spb.addStringLiteralMarker("start", "start", "end");
 		CharParserFactory parser1 = spb.build();
 
 		CheckTask.assertTests(strs, expect, (String s, Integer i) -> {

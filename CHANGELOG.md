@@ -4,7 +4,14 @@ This project does its best to adhere to [Semantic Versioning](http://semver.org/
 
 
 --------
-### [0.4.0](N/A) - 2020-05-23
+### [0.5.0](N/A) - 2020-11-21
+#### Changed
+* Change `CharConditionPipe.peekOptionalConditionSet()` return type from `S` to `int`
+* Update to jtext-parser@0.17.0 - added `getFirstChars()` to `CharCondions`, `StringConditions`, and `CharConditionPipe`
+
+
+--------
+### [0.4.0](https://github.com/TeamworkGuy2/JTextTokenizer/commit/ae2d2272a8e7891a94f9f2e450d616302d2f708d) - 2020-05-23
 #### Added
 * `CharConditions.Identifier` added to greatly simplify code parser edge cases in `jparse-code`
 * Moved `Inclusion` enum from `JTextParser` into this library

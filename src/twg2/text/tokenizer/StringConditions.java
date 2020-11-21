@@ -66,10 +66,19 @@ public class StringConditions {
 	        this.anyComplete = false;
 			this.includeMatchInRes = includeCondMatchInRes;
 			this.name = name;
+
 			// performance optimization for single char matchers
 			if(firstChars.length == 1) {
+				var ch1 = firstChars[0];
 				this.firstCharMatcher = (char ch, TextParser buf) -> {
-					return firstChars[0] == ch;
+					return ch1 == ch;
+				};
+			}
+			else if(firstChars.length == 2) {
+				var ch1 = firstChars[0];
+				var ch2 = firstChars[1];
+				this.firstCharMatcher = (char ch, TextParser buf) -> {
+					return ch1 == ch || ch2 == ch;
 				};
 			}
 			else {
@@ -98,6 +107,12 @@ public class StringConditions {
 		@Override
 		public CharParserPredicate getFirstCharMatcher() {
 			return firstCharMatcher;
+		}
+
+
+		@Override
+		public char[] getFirstChars() {
+			return firstChars;
 		}
 
 

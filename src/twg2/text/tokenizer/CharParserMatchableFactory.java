@@ -71,7 +71,11 @@ public class CharParserMatchableFactory<P extends CharParser> implements CharPar
 	@Override
 	public boolean isMatch(char ch, TextParser buf) {
 		var charConds = this.firstCharConds;
-		for(int i = 0, size = charConds.length; i < size; i++) {
+		// there is always at least one charCond
+		if(charConds[0].test(ch, buf)) {
+			return true;
+		}
+		for(int i = 1, size = charConds.length; i < size; i++) {
 			if(charConds[i].test(ch, buf)) {
 				return true;
 			}

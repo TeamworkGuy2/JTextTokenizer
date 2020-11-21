@@ -114,10 +114,20 @@ public class StringParserBuilder {
 
 
 	/**
+	 * @see StringConditions.Literal
+	 */
+	public StringParserBuilder addStringLiteralMarker(String name, String... strs) {
+		var cond = new StringConditions.Literal(name, strs, Inclusion.INCLUDE);
+		this.parsers.add(Tuples.of(cond.getFirstCharMatcher(), cond));
+		return this;
+	}
+
+
+	/**
 	 * @see CharConditions.Literal
 	 */
-	public StringParserBuilder addCharLiteralMarker(String name, char ch) {
-		var cond = new CharConditions.Literal(name, CharArrayList.of(ch), Inclusion.INCLUDE);
+	public StringParserBuilder addCharLiteralMarker(String name, char... chars) {
+		var cond = new CharConditions.Literal(name, CharArrayList.of(chars), Inclusion.INCLUDE);
 		this.parsers.add(Tuples.of(cond.getFirstCharMatcher(), cond));
 		return this;
 	}
