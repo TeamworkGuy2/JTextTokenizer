@@ -514,9 +514,10 @@ public class CharConditions {
 
 
 		/**
+		 * @param includeFirstCharsList whether to include and return the full list of valid chars from the returned {@link CharParserMatchable#getFirstChars()}
 		 * @return a basic parser for a string of contiguous characters matching those allowed in identifiers (e.g. 'anotherVar', '$thing', or '_stspr')
 		 */
-		public static CharConditions.BaseCharParserMatchable newInstance(String name) {
+		public static CharConditions.BaseCharParserMatchable newInstance(String name, boolean includeFirstCharsList) {
 			var firstCharSet = new CharSearchSet();
 			firstCharSet.addChar('$');
 			firstCharSet.addChar('_');
@@ -528,7 +529,7 @@ public class CharConditions {
 				return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') || ch == '_' || ch == '$' || ch == '.';
 			};
 
-			return new Identifier(name, charCheck, firstCharCheck, firstCharSet.toCharList().toArray(), Inclusion.INCLUDE, "[A-Za-z_$.]");
+			return new Identifier(name, charCheck, firstCharCheck, includeFirstCharsList ? firstCharSet.toCharList().toArray() : null, Inclusion.INCLUDE, "[A-Za-z_$.]");
 		}
 
 	}

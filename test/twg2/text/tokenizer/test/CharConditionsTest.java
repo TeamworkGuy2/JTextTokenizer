@@ -75,9 +75,16 @@ public class CharConditionsTest {
 
 	@Test
 	public void identifierCondition() {
-		String name = "Identifier";
-		CharParser cond = CharConditions.Identifier.newInstance(name);
+		CharParser cond = CharConditions.Identifier.newInstance("Identifier", true);
+		validIdentifiersTest(cond);
+		
+		cond = CharConditions.Identifier.newInstance("Identifier", false);
+		validIdentifiersTest(cond);
+	}
 
+
+	private static void validIdentifiersTest(CharParser cond) {
+		var name = cond.name();
 		parseTest(false, true, name, cond, "A0a ");
 		parseTest(false, true, name, cond, "&amp;");
 		parseTest(false, true, name, cond, "aa..bb..", "aa");

@@ -25,7 +25,8 @@ public class StringParserBuilderTest {
 		// single-character start and end markers and single-character escape markers
 		String[] strs =   { "\"a \\\" b \\\"", "\"\" !", "alpha", "\"a \n\\\"\\\" z\" echo" };
 		String[] expect = { "\"a \" b \"",     "\"\"",   "",      "\"a \n\"\" z\"" };
-		boolean[] successes = { false,         true,     false,   true };
+		boolean[] matched = { true,            true,     false,   true };
+		boolean[] completed = { false,         true,     false,   true };
 
 		var spb = new StringParserBuilder("stringParserBuilderTest1");
 		spb.addStartEndNotPrecededByMarkers("string literal", '"', '\\', '"', Inclusion.INCLUDE);
@@ -33,9 +34,12 @@ public class StringParserBuilderTest {
 
 		Function<String, String> escSeqDecoder = EscapeSequences.unicodeEscapeDecoder();
 		CheckTask.assertTests(strs, expect, (String s, Integer i) -> {
-			StringBuilder dst = new StringBuilder();
+			var dst = new StringBuilder();
+			var textSrc = TextIteratorParser.of(s);
+			Assert.assertEquals("i=" + i, matched[i], parser.isMatch(s.charAt(0), textSrc));
+
 			CharParser cond = parser.createParser();
-			Assert.assertEquals("i=" + i, successes[i], cond.readConditional(TextIteratorParser.of(s), dst));
+			Assert.assertEquals("i=" + i, completed[i], cond.readConditional(textSrc, dst));
 			return escSeqDecoder.apply(dst.toString());
 		});
 
@@ -58,9 +62,12 @@ public class StringParserBuilderTest {
 		CharParserFactory parser1 = spb.build();
 
 		CheckTask.assertTests(strs, expect, (String s, Integer i) -> {
-			StringBuilder dst = new StringBuilder();
+			var dst = new StringBuilder();
+			var textSrc = TextIteratorParser.of(s);
+			Assert.assertTrue(parser1.isMatch(s.charAt(0), textSrc));
+
 			CharParser cond = parser1.createParser();
-			cond.readConditional(TextIteratorParser.of(s), dst);
+			cond.readConditional(textSrc, dst);
 			return dst.toString();
 		});
 	}
@@ -80,9 +87,12 @@ public class StringParserBuilderTest {
 		CharParserFactory parser1 = spb.build();
 
 		CheckTask.assertTests(strs, expect, (String s, Integer i) -> {
-			StringBuilder dst = new StringBuilder();
+			var dst = new StringBuilder();
+			var textSrc = TextIteratorParser.of(s);
+			Assert.assertTrue(parser1.isMatch(s.charAt(0), textSrc));
+
 			CharParser cond = parser1.createParser();
-			cond.readConditional(TextIteratorParser.of(s), dst);
+			cond.readConditional(textSrc, dst);
 			return dst.toString();
 		});
 	}
@@ -99,9 +109,12 @@ public class StringParserBuilderTest {
 		CharParserFactory parser1 = spb.build();
 
 		CheckTask.assertTests(strs, expect, (String s, Integer i) -> {
-			StringBuilder dst = new StringBuilder();
+			var dst = new StringBuilder();
+			var textSrc = TextIteratorParser.of(s);
+			Assert.assertTrue(parser1.isMatch(s.charAt(0), textSrc));
+
 			CharParser cond = parser1.createParser();
-			cond.readConditional(TextIteratorParser.of(s), dst);
+			cond.readConditional(textSrc, dst);
 			return dst.toString();
 		});
 	}
@@ -118,9 +131,12 @@ public class StringParserBuilderTest {
 		CharParserFactory parser1 = spb.build();
 
 		CheckTask.assertTests(strs, expect, (String s, Integer i) -> {
-			StringBuilder dst = new StringBuilder();
+			var dst = new StringBuilder();
+			var textSrc = TextIteratorParser.of(s);
+			Assert.assertTrue(parser1.isMatch(s.charAt(0), textSrc));
+
 			CharParser cond = parser1.createParser();
-			cond.readConditional(TextIteratorParser.of(s), dst);
+			cond.readConditional(textSrc, dst);
 			return dst.toString();
 		});
 	}

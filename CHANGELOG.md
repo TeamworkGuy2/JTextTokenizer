@@ -4,7 +4,19 @@ This project does its best to adhere to [Semantic Versioning](http://semver.org/
 
 
 --------
-### [0.5.0](N/A) - 2020-11-21
+### [0.6.0](N/A) - 2020-11-21
+#### Added
+* `CharParserMatchableFactory.getOrCreateFirstCharPredicates()` to handle creating optimized `CharParserPredicate`s for groups of char parsers using the new `CharParserMatchable.getFirstChars()` method
+
+#### Changed
+* `CharParserMatchableFactory` constructors changed for flexibility and usage of `getOrCreateFirstCharPredicates()`:
+  * `(String, boolean, Iterable<CharParserMatchable>)` -> `(String, boolean, CharParserMatchable...)`
+  * `(String, boolean, Entry<CharParserPredicate, P>...)` -> `(String, boolean, CharParserPredicate[], P...)`
+* Added `boolean includeFirstCharsList` parameter to `CharConditions.Identifier.newInstance()` for control of first char predicate optimizations on returned instances
+
+
+--------
+### [0.5.0](https://github.com/TeamworkGuy2/JTextTokenizer/commit/043bbc3c9320544c24e369dac7f586b4f0062399) - 2020-11-21
 #### Changed
 * Change `CharConditionPipe.peekOptionalConditionSet()` return type from `S` to `int`
 * Update to jtext-parser@0.17.0 - added `getFirstChars()` to `CharCondions`, `StringConditions`, and `CharConditionPipe`
