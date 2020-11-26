@@ -4,7 +4,26 @@ This project does its best to adhere to [Semantic Versioning](http://semver.org/
 
 
 --------
-### [0.6.0](N/A) - 2020-11-21
+### [0.7.0](N/A) - 2020-11-26
+#### Added
+* `CharParserMatchableFactory.Reusable` subclass which implements parser pooling reuse via `returnParser()`
+
+#### Changed
+* `TypedLogger` renamed `TokenizationLogger` with methods specific to each type of action logged negating the need for `ParserAction` enum, simplifies implementations
+* Added missing parameters to several all args constructors in `CharConditions` and `StringConditons` classes
+* Adjusted `CharMultiConditionParser` internal implementation to ensure that `ParserFactory.returnParser()` gets called when we're done with each parser
+* Optimizations to reuse `firstCharMatcher` predicates when `StringConditions` classes are copied
+* `StringParserBuild.build()` new `boolean reuseCharParsers` parameter added determine whether to create a `CharParserMatchableFactory.Reusable` pooling implementation or a standard `CharParserMatchableFactory` implementation
+* Updated to `jtext-parser@0.18.0` and added `canRecycleAll(ParserCondition...)` to `CharCompoundConditions` since it was removed from that library
+
+#### Removed
+* `ParserAction` enum no longer needed, see `TokenizationLogger`
+* Unnecessary `BaseCharParser.copyTo()`, `BaseCharParserMatchable.copyTo()`, and `BaseStringParser.copyTo()` methods since they are unused and `copy()` methods should be used in conjunction with all args constructors
+* Unused `jtuples` dependency
+
+
+--------
+### [0.6.0](https://github.com/TeamworkGuy2/JTextTokenizer/commit/a3722fc29251fef16f0976bdad2836b4de1d1d83) - 2020-11-21
 #### Added
 * `CharParserMatchableFactory.getOrCreateFirstCharPredicates()` to handle creating optimized `CharParserPredicate`s for groups of char parsers using the new `CharParserMatchable.getFirstChars()` method
 
@@ -19,7 +38,7 @@ This project does its best to adhere to [Semantic Versioning](http://semver.org/
 ### [0.5.0](https://github.com/TeamworkGuy2/JTextTokenizer/commit/043bbc3c9320544c24e369dac7f586b4f0062399) - 2020-11-21
 #### Changed
 * Change `CharConditionPipe.peekOptionalConditionSet()` return type from `S` to `int`
-* Update to jtext-parser@0.17.0 - added `getFirstChars()` to `CharCondions`, `StringConditions`, and `CharConditionPipe`
+* Update to jtext-parser@0.17.0 - added `getFirstChars()` to `CharConditions`, `StringConditions`, and `CharConditionPipe`
 
 
 --------

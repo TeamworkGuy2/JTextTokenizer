@@ -3,6 +3,7 @@ package twg2.text.tokenizer;
 import java.util.Collection;
 
 import twg2.arrays.ArrayManager;
+import twg2.parser.condition.ParserCondition;
 import twg2.parser.condition.text.CharParser;
 import twg2.parser.textFragment.TextFragmentRef;
 import twg2.parser.textFragment.TextFragmentRefImplMut;
@@ -15,6 +16,17 @@ import twg2.text.stringUtils.StringJoin;
  */
 public class CharCompoundConditions {
 
+	@SafeVarargs
+	public static boolean canRecycleAll(ParserCondition... conds) {
+		for(ParserCondition cond : conds) {
+			if(!cond.canRecycle()) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+
 
 	/** A collection of {@link CharParser ParserConditions}
 	 * @author TeamworkGuy2
@@ -26,9 +38,9 @@ public class CharCompoundConditions {
 		int matchingCondsSize;
 		boolean anyComplete = false;
 		boolean failed = false;
+		final boolean canReuse;
 		int acceptedCount;
 		TextFragmentRefImplMut coords = new TextFragmentRefImplMut();
-		Runnable resetFunc;
 		String name;
 
 
@@ -40,21 +52,22 @@ public class CharCompoundConditions {
 		@SafeVarargs
 		public BaseFilter(String name, boolean doCopyConds, CharParser... conds) {
 			int condsCnt = conds.length;
-			this.originalConds = conds;
+			var copyConds = new CharParser[condsCnt];
 
-			CharParser[] copyConds = conds;
 			if(doCopyConds) {
-				copyConds = new CharParser[condsCnt];
 				for(int i = 0; i < condsCnt; i++) {
 					copyConds[i] = conds[i].copy();
 				}
 			}
+			else {
+		        System.arraycopy(conds, 0, copyConds, 0, condsCnt);
+			}
 
-			this.matchingConds = new CharParser[condsCnt];
-	        System.arraycopy(copyConds, 0, this.matchingConds, 0, condsCnt);
+			this.originalConds = conds;
+			this.matchingConds = copyConds;
 	        this.matchingCondsSize = condsCnt;
-
 	        this.anyComplete = false;
+	        this.canReuse = canRecycleAll(copyConds);
 			this.name = name;
 		}
 
@@ -85,7 +98,7 @@ public class CharCompoundConditions {
 
 		@Override
 		public boolean canRecycle() {
-			return true;
+			return canReuse;
 		}
 
 
@@ -112,8 +125,8 @@ public class CharCompoundConditions {
 			coords = new TextFragmentRefImplMut();
 			acceptedCount = 0;
 
-			if(resetFunc != null) {
-				resetFunc.run();
+			for(int i = 0; i < origCnt; i++) {
+				matchingConds[i].copyOrReuse();
 			}
 		}
 

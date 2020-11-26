@@ -24,8 +24,10 @@ public class StringParserBuilder {
 	}
 
 
-	public CharParserFactory build() {
-		return new CharParserMatchableFactory<CharParser>(name, compound, parsers.toArray(new CharParserMatchable[parsers.size()]));
+	public CharParserFactory build(boolean reuseCharParsers) {
+		return reuseCharParsers ?
+			new CharParserMatchableFactory.Reusable<CharParser>(name, compound, parsers.toArray(new CharParserMatchable[parsers.size()])):
+			new CharParserMatchableFactory<CharParser>(name, compound, parsers.toArray(new CharParserMatchable[parsers.size()])) ;
 	}
 
 

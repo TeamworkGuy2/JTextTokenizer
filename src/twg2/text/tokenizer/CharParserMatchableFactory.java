@@ -2,6 +2,7 @@ package twg2.text.tokenizer;
 
 import java.util.Arrays;
 
+import twg2.collections.dataStructures.Bag;
 import twg2.collections.primitiveCollections.CharArrayList;
 import twg2.collections.primitiveCollections.CharListSorted;
 import twg2.parser.condition.text.CharParser;
@@ -16,12 +17,11 @@ import twg2.parser.textParser.TextParser;
  * @since 2016-2-21
  */
 public class CharParserMatchableFactory<P extends CharParser> implements CharParserFactory {
-	@SuppressWarnings("unused")
-	private String name;
-	private P[] conditions;
-	private CharParserPredicate[] firstCharConds;
-	private CharParser conditionSet;
-	private boolean compound;
+	String name;
+	P[] conditions;
+	CharParserPredicate[] firstCharConds;
+	CharParser conditionSet;
+	boolean compound;
 
 
 	@SuppressWarnings("unchecked")
@@ -86,8 +86,19 @@ public class CharParserMatchableFactory<P extends CharParser> implements CharPar
 
 
 	@Override
+	public void returnParser(CharParser parser) {
+		// do nothing
+	}
+
+
+	@Override
 	public String toString() {
 		return (compound ? "compound " : "") + Arrays.toString(conditions);
+	}
+
+
+	public String name() {
+		return name;
 	}
 
 
@@ -176,6 +187,64 @@ public class CharParserMatchableFactory<P extends CharParser> implements CharPar
 		}
 
 		return parserPredicates;
+	}
+
+
+
+	public static class Reusable<P extends CharParser> extends CharParserMatchableFactory<P> {
+		private static final int maxPoolSize = 100;
+
+		private Bag<CharParser> conditionSetPool;
+		private int reuseCount = 0;
+		private int poolPeekSize = 0;
+
+
+		@SuppressWarnings("unchecked")
+		public Reusable(String name, boolean compound, CharParserMatchable... parsers) {
+			this(name, compound, getOrCreateFirstCharPredicates(parsers, 200), (P[])parsers);
+		}
+
+
+		@SafeVarargs
+		public Reusable(String name, boolean compound, CharParserPredicate[] firstCharPredicates, P... parsers) {
+			super(name, compound, firstCharPredicates, parsers);
+			this.conditionSetPool = new Bag<>();
+		}
+
+
+		@Override
+		public CharParser createParser() {
+			int poolSize = conditionSetPool.size();
+			if(poolSize > 0) {
+				var parser = conditionSetPool.remove(poolSize - 1);
+				reuseCount++;
+				return parser;
+			}
+			return conditionSet.copy();
+		}
+
+
+		@Override
+		public void returnParser(CharParser parser) {
+			int poolSize = conditionSetPool.size();
+			if(poolSize <= maxPoolSize) {
+				if(parser.canRecycle()) {
+					conditionSetPool.add(parser.recycle());
+					poolPeekSize = Math.max(poolPeekSize, poolSize + 1);
+				}
+			}
+		}
+
+
+		public int getReuseCount() {
+			return reuseCount;
+		}
+
+
+		public int getPoolPeekSize() {
+			return poolPeekSize;
+		}
+
 	}
 
 }

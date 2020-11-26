@@ -117,7 +117,7 @@ public class CharConditionPipe {
 
 			this.conditionSets = new ParserCondition[][] { condSet0 };
 			this.curCondition = firstFilter;
-			this.canReuse = ParserCondition.canRecycleAll(condSet0);
+			this.canReuse = CharCompoundConditions.canRecycleAll(condSet0);
 			this.name = name;
 		}
 
@@ -128,7 +128,7 @@ public class CharConditionPipe {
 
 			this.conditionSets = new ParserCondition[][] { condSet0 };
 			this.curCondition = (T)condSet0[0];
-			this.canReuse = ParserCondition.canRecycleAll(condSet0);
+			this.canReuse = CharCompoundConditions.canRecycleAll(condSet0);
 			this.name = name;
 		}
 
@@ -141,7 +141,7 @@ public class CharConditionPipe {
 				var filters = filterSets[i];
 				var filtersCopy = copyConditionsInPlace(copy, Arrays.copyOf(filters, filters.length));
 				condCopies[i] = filtersCopy;
-				reusable &= ParserCondition.canRecycleAll(filtersCopy);
+				reusable &= CharCompoundConditions.canRecycleAll(filtersCopy);
 			}
 			@SuppressWarnings("unchecked")
 			var curCond = filterSetsCnt > 0 ? (T)condCopies[0][0] : null;

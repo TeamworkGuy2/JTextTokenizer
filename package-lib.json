@@ -1,5 +1,5 @@
 {
-	"version" : "0.6.0",
+	"version" : "0.7.0",
 	"name" : "jtext-tokenizer",
 	"description" : "CharParser and CharParserFactory implementations (jtext-parser library) for text tokenization",
 	"homepage" : "https://github.com/TeamworkGuy2/JTextTokenizer",
@@ -12,7 +12,6 @@
 		"jfunc": "*",
 		"jprimitive-collections": "*",
 		"jtext-parser": "*",
-		"jtext-util": "*",
-		"jtuples": "*"
+		"jtext-util": "*"
 	}
 }

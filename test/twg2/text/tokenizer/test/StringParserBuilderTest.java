@@ -22,6 +22,12 @@ public class StringParserBuilderTest {
 
 	@Test
 	public void startEndNotPrecededByMarkers() throws IOException {
+		startEndNotPrecededByMarkers(false);
+		startEndNotPrecededByMarkers(true);
+	}
+
+
+	private void startEndNotPrecededByMarkers(boolean reusable) throws IOException {
 		// single-character start and end markers and single-character escape markers
 		String[] strs =   { "\"a \\\" b \\\"", "\"\" !", "alpha", "\"a \n\\\"\\\" z\" echo" };
 		String[] expect = { "\"a \" b \"",     "\"\"",   "",      "\"a \n\"\" z\"" };
@@ -30,7 +36,7 @@ public class StringParserBuilderTest {
 
 		var spb = new StringParserBuilder("stringParserBuilderTest1");
 		spb.addStartEndNotPrecededByMarkers("string literal", '"', '\\', '"', Inclusion.INCLUDE);
-		CharParserFactory parser = spb.build();
+		CharParserFactory parser = spb.build(reusable);
 
 		Function<String, String> escSeqDecoder = EscapeSequences.unicodeEscapeDecoder();
 		CheckTask.assertTests(strs, expect, (String s, Integer i) -> {
@@ -40,18 +46,30 @@ public class StringParserBuilderTest {
 
 			CharParser cond = parser.createParser();
 			Assert.assertEquals("i=" + i, completed[i], cond.readConditional(textSrc, dst));
+			if(reusable) {
+				parser.returnParser(cond);
+			}
 			return escSeqDecoder.apply(dst.toString());
 		});
 
 		StringBuilder dst = new StringBuilder();
 		CharParser cond2 = parser.createParser();
 		Assert.assertFalse(cond2.readConditional(TextIteratorParser.of("-\"st\"-"), dst));
+		if(reusable) {
+			parser.returnParser(cond2);
+		}
 		Assert.assertEquals("", dst.toString());
 	}
 
 
 	@Test
 	public void startEndNotPrecededByMarkers2() throws IOException {
+		startEndNotPrecededByMarkers2(false);
+		startEndNotPrecededByMarkers2(true);
+	}
+
+
+	private void startEndNotPrecededByMarkers2(boolean reusable) throws IOException {
 		// single-character start and end markers and single-character escape markers
 		String[] strs =   { "\"a \\\" b \\\"", "\"\" !", "alpha", "\"a \n\\\"\\\" z\" echo" };
 		String[] expect = { "\"a \\\" b \\\"", "\"\"",   "a",     "\"a \n\\\"\\\" z\"" };
@@ -59,7 +77,7 @@ public class StringParserBuilderTest {
 		var spb = new StringParserBuilder("stringParserBuilderTest2");
 		spb.addCharLiteralMarker("a", 'a');
 		spb.addStartEndNotPrecededByMarkers("string literal", '"', '\\', '"', Inclusion.INCLUDE);
-		CharParserFactory parser1 = spb.build();
+		CharParserFactory parser1 = spb.build(reusable);
 
 		CheckTask.assertTests(strs, expect, (String s, Integer i) -> {
 			var dst = new StringBuilder();
@@ -68,6 +86,9 @@ public class StringParserBuilderTest {
 
 			CharParser cond = parser1.createParser();
 			cond.readConditional(textSrc, dst);
+			if(reusable) {
+				parser1.returnParser(cond);
+			}
 			return dst.toString();
 		});
 	}
@@ -75,6 +96,12 @@ public class StringParserBuilderTest {
 
 	@Test
 	public void addStartEndMarkers() throws IOException {
+		addStartEndMarkers(false);
+		addStartEndMarkers(true);
+	}
+
+
+	private void addStartEndMarkers(boolean reusable) throws IOException {
 		// single-character start and end markers and single-character escape markers
 		String[] strs =   { "[abcdef] -", "@[] + 1", "<tag /> <z/>", "{{start}} -", "@[@[a]b]" };
 		String[] expect = { "[abcdef]",   "@[]",     "<tag />",      "{{start}}", "@[@[a]" };
@@ -84,7 +111,7 @@ public class StringParserBuilderTest {
 		spb.addStartEndMarkers("@[]", "@[", ']', Inclusion.INCLUDE);
 		spb.addStartEndMarkers("</>", '<', "/>", Inclusion.INCLUDE);
 		spb.addStartEndMarkers("{{}}", "{{", "}}", Inclusion.INCLUDE);
-		CharParserFactory parser1 = spb.build();
+		CharParserFactory parser1 = spb.build(reusable);
 
 		CheckTask.assertTests(strs, expect, (String s, Integer i) -> {
 			var dst = new StringBuilder();
@@ -93,6 +120,9 @@ public class StringParserBuilderTest {
 
 			CharParser cond = parser1.createParser();
 			cond.readConditional(textSrc, dst);
+			if(reusable) {
+				parser1.returnParser(cond);
+			}
 			return dst.toString();
 		});
 	}
@@ -100,13 +130,19 @@ public class StringParserBuilderTest {
 
 	@Test
 	public void charLiteralMarkers() throws IOException {
+		charLiteralMarkers(false);
+		charLiteralMarkers(true);
+	}
+
+
+	private void charLiteralMarkers(boolean reusable) throws IOException {
 		String[] strs =   { "@start -", "start; end;", ";", "@@" };
 		String[] expect = { "@", "start", ";", "@" };
 
 		var spb = new StringParserBuilder("charLiteralMarkers");
 		spb.addCharLiteralMarker("@;", '@', ';');
 		spb.addCharMatcher("start", new char[] { 's', 't', 'a', 'r', 't' });
-		CharParserFactory parser1 = spb.build();
+		CharParserFactory parser1 = spb.build(reusable);
 
 		CheckTask.assertTests(strs, expect, (String s, Integer i) -> {
 			var dst = new StringBuilder();
@@ -115,6 +151,9 @@ public class StringParserBuilderTest {
 
 			CharParser cond = parser1.createParser();
 			cond.readConditional(textSrc, dst);
+			if(reusable) {
+				parser1.returnParser(cond);
+			}
 			return dst.toString();
 		});
 	}
@@ -122,13 +161,19 @@ public class StringParserBuilderTest {
 
 	@Test
 	public void stringLiteralMarkers() throws IOException {
+		stringLiteralMarkers(false);
+		stringLiteralMarkers(true);
+	}
+
+
+	private void stringLiteralMarkers(boolean reusable) throws IOException {
 		String[] strs =   { "@start -", "start; end;", "end -", "@@" };
 		String[] expect = { "@", "start", "end", "@" };
 
 		var spb = new StringParserBuilder("charLiteralMarkers");
 		spb.addStringLiteralMarker("@", "@");
 		spb.addStringLiteralMarker("start", "start", "end");
-		CharParserFactory parser1 = spb.build();
+		CharParserFactory parser1 = spb.build(reusable);
 
 		CheckTask.assertTests(strs, expect, (String s, Integer i) -> {
 			var dst = new StringBuilder();
@@ -137,6 +182,9 @@ public class StringParserBuilderTest {
 
 			CharParser cond = parser1.createParser();
 			cond.readConditional(textSrc, dst);
+			if(reusable) {
+				parser1.returnParser(cond);
+			}
 			return dst.toString();
 		});
 	}

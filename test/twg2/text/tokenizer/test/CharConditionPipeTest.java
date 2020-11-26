@@ -205,7 +205,7 @@ public class CharConditionPipeTest {
 			return (ch >= '0' && ch <= '9') || (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || ch == '_' || ch == '$';
 		};
 
-		var cond = new CharConditions.ContainsFirstSpecial("identifier", charCheck, firstCharCheck, firstCharSet.toCharList().toArray(), Inclusion.INCLUDE);
+		var cond = new CharConditions.ContainsFirstSpecial("identifier", charCheck, firstCharCheck, firstCharSet.toCharList().toArray(), Inclusion.INCLUDE, null);
 		return cond;
 	}
 

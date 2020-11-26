@@ -45,19 +45,15 @@ public class StringConditions {
 
 		// package-private
 		BaseStringParser(String name, Collection<String> strs, Inclusion includeCondMatchInRes) {
-			this(name, strs.toArray(ArrayUtil.EMPTY_STRING_ARRAY), includeCondMatchInRes);
+			this(name, strs.toArray(ArrayUtil.EMPTY_STRING_ARRAY), null, null, includeCondMatchInRes);
 		}
 
 
 		// package-private
-		BaseStringParser(String name, String[] strs, Inclusion includeCondMatchInRes) {
+		BaseStringParser(String name, String[] strs, char[] firstChars, CharParserPredicate firstCharMatcher, Inclusion includeCondMatchInRes) {
 			int strCnt = strs.length;
 			this.originalStrs = strs;
-			var firstChars = new char[strCnt];
-			for(int i = 0; i < strCnt; i++) {
-				firstChars[i] = strs[i].charAt(0);
-			}
-			this.firstChars = firstChars;
+			this.firstChars = firstChars = getFirstChars(firstChars, strs);
 
 			this.matchingStrs = new String[strCnt];
 	        System.arraycopy(strs, 0, this.matchingStrs, 0, strCnt);
@@ -67,8 +63,11 @@ public class StringConditions {
 			this.includeMatchInRes = includeCondMatchInRes;
 			this.name = name;
 
+			if(firstCharMatcher != null) {
+				this.firstCharMatcher = firstCharMatcher;
+			}
 			// performance optimization for single char matchers
-			if(firstChars.length == 1) {
+			else if(firstChars.length == 1) {
 				var ch1 = firstChars[0];
 				this.firstCharMatcher = (char ch, TextParser buf) -> {
 					return ch1 == ch;
@@ -82,9 +81,10 @@ public class StringConditions {
 				};
 			}
 			else {
+				var chs = firstChars;
 				this.firstCharMatcher = (char ch, TextParser buf) -> {
-					for(int i = 0, size = firstChars.length; i < size; i++) {
-						if(firstChars[i] == ch) { return true; }
+					for(int i = 0, size = chs.length; i < size; i++) {
+						if(chs[i] == ch) { return true; }
 					}
 					return false;
 				};
@@ -195,10 +195,21 @@ public class StringConditions {
 		}
 
 
-		public static BaseStringParser copyTo(BaseStringParser src, BaseStringParser dst) {
-			dst.originalStrs = src.originalStrs;
-			dst.includeMatchInRes = src.includeMatchInRes;
-			return dst;
+		/** Returns {@code firstChars} if not null, else returns the {@link String#charAt(int) charAt(0)} of all the {@code strs}
+		 * @param firstChars the optional first chars array to return as-is
+		 * @param strs the array of string to extract first chars from if {@code firstChars} is null
+		 * @return an array of the first chars in {@code strs}
+		 */
+		protected static char[] getFirstChars(char[] firstChars, String[] strs) {
+			if(firstChars == null) {
+				int strCnt = strs.length;
+				firstChars = new char[strCnt];
+				for(int i = 0; i < strCnt; i++) {
+					firstChars[i] = strs[i].charAt(0);
+				}
+			}
+			
+			return firstChars;
 		}
 
 	}
@@ -211,7 +222,12 @@ public class StringConditions {
 	public static class Literal extends BaseStringParser {
 
 		public Literal(String name, String[] strs, Inclusion includeCondMatchInRes) {
-			super(name, strs, includeCondMatchInRes);
+			super(name, strs, null, null, includeCondMatchInRes);
+		}
+
+
+		public Literal(String name, String[] strs, char[] firstChars, CharParserPredicate firstCharMatcher, Inclusion includeCondMatchInRes) {
+			super(name, strs, firstChars, firstCharMatcher, includeCondMatchInRes);
 		}
 
 
@@ -249,7 +265,7 @@ public class StringConditions {
 
 		@Override
 		public Literal copy() {
-			return new Literal(super.name, super.originalStrs, super.includeMatchInRes);
+			return new Literal(super.name, super.originalStrs, super.firstChars, super.firstCharMatcher, super.includeMatchInRes);
 		}
 
 	}
@@ -262,7 +278,12 @@ public class StringConditions {
 	public static class End extends BaseStringParser {
 
 		public End(String name, String[] strs, Inclusion includeCondMatchInRes) {
-			super(name, strs, includeCondMatchInRes);
+			super(name, strs, null, null, includeCondMatchInRes);
+		}
+
+
+		public End(String name, String[] strs, char[] firstChars, CharParserPredicate firstCharMatcher, Inclusion includeCondMatchInRes) {
+			super(name, strs, firstChars, firstCharMatcher, includeCondMatchInRes);
 		}
 
 
@@ -307,7 +328,7 @@ public class StringConditions {
 
 		@Override
 		public End copy() {
-			return new End(super.name, super.originalStrs, super.includeMatchInRes);
+			return new End(super.name, super.originalStrs, super.firstChars, super.firstCharMatcher, super.includeMatchInRes);
 		}
 
 
